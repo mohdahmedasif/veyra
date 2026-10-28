@@ -48,5 +48,5 @@ export const outfitSchema = z.object({
 export const suggestSchema = z.object({
   occasion: z.enum(OCCASIONS as [string, ...string[]]).optional().nullable(),
   season: z.enum(SEASONS as [string, ...string[]]).optional().nullable(),
-  count: z.number().int().min(1).max(5).default(4),
+  count: z.number().int().min(1).max(12).default(4),
 });

@@ -13,7 +13,7 @@ const DESKTOP: { href: string; label: string }[] = [
   { href: "/dashboard", label: "Home" },
   { href: "/wardrobe", label: "Wardrobe" },
   { href: "/outfits", label: "Mix & Match" },
-  { href: "/ai", label: "AI Stylist" },
+  { href: "/combos", label: "Combos" },
   { href: "/favorites", label: "Saved" },
 ];
 
@@ -21,7 +21,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: "/dashboard", label: "Home", icon: "home" },
   { href: "/wardrobe", label: "Closet", icon: "hanger" },
   { href: "/outfits", label: "Mix", icon: "layers" },
-  { href: "/ai", label: "Stylist", icon: "sparkle" },
+  { href: "/combos", label: "Combos", icon: "sparkle" },
 ];
 
 export interface NavProfile {
@@ -35,7 +35,7 @@ export function AppNav({ profile }: { profile: NavProfile }) {
   const router = useRouter();
   const [menu, setMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const active = (href: string) => path === href || path.startsWith(href + "/");
+  const active = (href: string) => path !== "/wardrobe/new" && (path === href || path.startsWith(href + "/"));
 
   useEffect(() => setMenu(false), [path]);
   useEffect(() => {
@@ -69,7 +69,7 @@ export function AppNav({ profile }: { profile: NavProfile }) {
           </nav>
           <div className="ml-auto flex items-center gap-2 md:ml-0">
             <Link href="/wardrobe/new" className="btn-accent hidden min-h-[38px] px-4 md:inline-flex">
-              <Icon name="plus" size={16} /> Add piece
+              <Icon name="camera" size={16} /> Snap clothes
             </Link>
             <div className="relative" ref={menuRef}>
               <button onClick={() => setMenu((m) => !m)} aria-label="Profile menu" aria-expanded={menu} className="flex items-center gap-2 rounded-full p-1 transition hover:bg-surface-2">
@@ -109,8 +109,8 @@ export function AppNav({ profile }: { profile: NavProfile }) {
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line/70 bg-bg/90 backdrop-blur-xl md:hidden">
         <div className="mx-auto grid h-16 max-w-md grid-cols-5 items-center px-2">
           {TABS.slice(0, 2).map((t) => <Tab key={t.href} {...t} active={active(t.href)} />)}
-          <Link href="/wardrobe/new" aria-label="Add piece" className="mx-auto flex h-12 w-12 -translate-y-3 items-center justify-center rounded-full bg-accent text-accent-ink shadow-lift transition active:scale-95">
-            <Icon name="plus" size={24} />
+          <Link href="/wardrobe/new" aria-label="Snap clothes" className="mx-auto flex h-12 w-12 -translate-y-3 items-center justify-center rounded-full bg-accent text-accent-ink shadow-lift transition active:scale-95">
+            <Icon name="camera" size={24} />
           </Link>
           {TABS.slice(2).map((t) => <Tab key={t.href} {...t} active={active(t.href)} />)}
         </div>

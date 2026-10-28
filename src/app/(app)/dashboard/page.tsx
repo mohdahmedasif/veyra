@@ -4,6 +4,7 @@ import { Icon } from "@/components/Icon";
 import { ItemImage } from "@/components/ItemCard";
 import { OutfitCard } from "@/components/OutfitCard";
 import { prisma } from "@/lib/prisma";
+import { generateOutfits } from "@/lib/style-engine";
 import { requireProfile } from "@/lib/session";
 import { label } from "@/types";
 
@@ -26,8 +27,11 @@ export default async function Dashboard() {
       orderBy: { createdAt: "desc" },
       include: { items: { include: { item: true }, orderBy: { position: "asc" } } },
     }),
-    prisma.clothingItem.findMany({ where: { profileId }, take: 8, orderBy: { createdAt: "desc" } }),
+    prisma.clothingItem.findMany({ where: { profileId }, orderBy: { createdAt: "desc" } }),
   ]);
+  const allItems = newest;
+  const byId = new Map(allItems.map((i) => [i.id, i]));
+  const todays = generateOutfits(allItems, { count: 3 });
 
   const stats = [
     { label: "Pieces", value: itemCount, href: "/wardrobe" },
@@ -41,8 +45,8 @@ export default async function Dashboard() {
         <p className="eyebrow">{greeting()}</p>
         <h1 className="mt-2 text-4xl leading-tight md:text-6xl">{profile.name.split(" ")[0]}, what are we wearing today?</h1>
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/ai" className="btn-accent"><Icon name="sparkle" size={18} /> Style me</Link>
-          <Link href="/outfits" className="btn-ghost"><Icon name="layers" size={18} /> Mix & Match</Link>
+          <Link href="/wardrobe/new" className="btn-accent"><Icon name="camera" size={18} /> Snap clothes</Link>
+          <Link href="/combos" className="btn-ghost"><Icon name="sparkle" size={18} /> See combos</Link>
         </div>
       </section>
 
@@ -62,7 +66,7 @@ export default async function Dashboard() {
             <Link href="/wardrobe" className="text-sm text-muted hover:text-ink">See all →</Link>
           </div>
           <div className="scroll-row !flex-nowrap">
-            {newest.map((i) => (
+            {newest.slice(0, 8).map((i) => (
               <Link key={i.id} href="/wardrobe" className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-2xl border border-line md:w-36">
                 <ItemImage src={i.imageUrl} alt={i.title} sizes="144px" />
               </Link>
@@ -78,8 +82,22 @@ export default async function Dashboard() {
         </section>
       )}
 
+      {todays.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-2xl">Today&apos;s combos</h2>
+            <Link href="/combos" className="text-sm text-muted hover:text-ink">All combos →</Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {todays.map((s) => (
+              <OutfitCard key={s.itemIds.join()} name={s.name} score={s.score} reason={s.reason} items={s.itemIds.map((id) => byId.get(id)!).filter(Boolean)} />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
-        <h2 className="mb-4 text-2xl">Recent looks</h2>
+        <h2 className="mb-4 text-2xl">Saved looks</h2>
         {recent.length ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {recent.map((o) => (
@@ -87,9 +105,9 @@ export default async function Dashboard() {
             ))}
           </div>
         ) : itemCount ? (
-          <EmptyState icon="sparkle" title="No outfits yet" body="Let the AI Stylist compose your first looks from your closet." href="/ai" cta="Get suggestions" />
+          <EmptyState icon="heart" title="No saved looks yet" body="Open Combos and tap the heart on the outfits you love." href="/combos" cta="See combos" />
         ) : (
-          <EmptyState icon="camera" title="Start your closet" body="Snap a few favourite pieces — Veyra takes it from there." href="/wardrobe/new" cta="Add your first piece" />
+          <EmptyState icon="camera" title="Start your closet" body="Snap your shirts, pants and dresses — Veyra makes the outfits." href="/wardrobe/new" cta="Snap clothes" />
         )}
       </section>
     </div>

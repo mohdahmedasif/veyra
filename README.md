@@ -4,6 +4,8 @@
 
 ## Features
 
+- **Snap your clothes**: take photos of shirts, pants, dresses, shoes and more, several at once. With a Gemini or OpenAI key, Veyra recognizes each piece's type, color, season and occasions automatically. Without one, it guesses the color on the device and you tap the type. Photos are shrunk on the phone before uploading.
+- **Automatic combos**: as soon as your closet has a top and a bottom (or a dress), the Combos page and dashboard build outfit combinations for you. You can filter them by occasion or season, ask the AI for fresh ideas, and tap ♥ to save.
 - **Household profiles**: one admin account and up to 8 Netflix-style profiles. Each profile has its own closet, outfits and style preferences, and unlocks with a 4–6 digit PIN. Five wrong PINs lock the profile for 5 minutes, and the admin can reset a PIN to clear the lock.
 - **Device pairing**: the admin generates a **one-time pairing key** in Settings → Devices. It's single use and expires after 10 minutes. Another phone or tablet enters it at `/pair` and is then trusted. Devices can be revoked at any time.
 - **Gemini / OpenAI in Settings**: the admin chooses Google Gemini, OpenAI or the built-in engine, and pastes in a key. Keys are encrypted with AES-256-GCM and never shown again. A Test key button checks that a key works.
@@ -94,6 +96,7 @@ src/
 | GET / POST | `/api/items` | List items (`?category=&color=&occasion=`) or create one |
 | PATCH / DELETE | `/api/items/:id` | Update or remove an item |
 | POST | `/api/upload` | Multipart image upload, returns `{ url }` |
+| POST | `/api/items/analyze` | Uploads a photo and returns `{ url, detected }`, the AI-detected tags (`null` without an AI key) |
 | GET / POST | `/api/outfits` | List outfits (`?favorites=1`) or save one |
 | DELETE | `/api/outfits/:id` | Delete an outfit |
 | POST | `/api/outfits/:id/favorite` | Toggle favorite |

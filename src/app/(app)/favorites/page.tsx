@@ -42,7 +42,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: { 
           icon="heart"
           title={showAll ? "No outfits saved" : "No favorites yet"}
           body="Save looks from Mix & Match or the AI Stylist, then heart the ones you love."
-          href="/ai"
+          href="/combos"
           cta="Find a look"
         />
       )}

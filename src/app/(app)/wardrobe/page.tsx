@@ -42,7 +42,7 @@ export default async function WardrobePage({ searchParams }: { searchParams: Sea
   return (
     <div>
       <PageHeader eyebrow="Wardrobe" title="Your closet" subtitle={`${total} piece${total === 1 ? "" : "s"}${filtered ? ` · showing ${items.length}` : ""}`}>
-        <Link href="/wardrobe/new" className="btn-primary hidden md:inline-flex"><Icon name="plus" size={16} /> Add piece</Link>
+        <Link href="/wardrobe/new" className="btn-primary hidden md:inline-flex"><Icon name="camera" size={16} /> Snap clothes</Link>
       </PageHeader>
 
       {total > 0 && (
