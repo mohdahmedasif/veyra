@@ -150,5 +150,4 @@ vite.config.ts.timestamp-*
 .turbo
 
 # local uploads
-public/uploads/*
-!public/uploads/.gitkeep
+uploads/

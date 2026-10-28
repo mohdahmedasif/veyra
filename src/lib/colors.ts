@@ -2,14 +2,14 @@
 
 const NAMED: Record<string, string> = {
   black: "#111111", white: "#FFFFFF", ivory: "#F5EFE6", cream: "#F3E9D2", beige: "#D8CBB5",
-  camel: "#C19A6B", tan: "#B08355", brown: "#6B4423", grey: "#8C8C8C", gray: "#8C8C8C",
+  camel: "#C19A6B", tan: "#B08355", brown: "#6B4423", grey: "#8C8C8C", gray: "#8C8C8C", charcoal: "#3A3A3C",
   navy: "#1F2A44", blue: "#4A78C2", denim: "#5B7DB1", red: "#C0392B", burgundy: "#7B1E2B",
   pink: "#E8A0B4", blush: "#EDCFC6", orange: "#E67E22", yellow: "#F4D03F", mustard: "#D4A017",
   green: "#3E8E5E", olive: "#708238", sage: "#A3B18A", purple: "#7D5BA6", lavender: "#C8B6E2",
   gold: "#D4AF37", silver: "#C0C0C0",
 };
 
-const NEUTRALS = new Set(["black", "white", "ivory", "cream", "beige", "camel", "tan", "brown", "grey", "gray", "navy", "denim", "gold", "silver"]);
+const NEUTRALS = new Set(["black", "white", "ivory", "cream", "beige", "camel", "tan", "brown", "grey", "gray", "charcoal", "navy", "denim", "gold", "silver"]);
 
 export function isNeutral(color: string, hex?: string | null) {
   if (NEUTRALS.has(color.toLowerCase())) return true;

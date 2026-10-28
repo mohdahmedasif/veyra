@@ -23,7 +23,7 @@ RUN groupadd -r veyra && useradd -r -g veyra veyra
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=veyra:veyra /app/.next/standalone ./
 COPY --from=builder --chown=veyra:veyra /app/.next/static ./.next/static
-RUN mkdir -p public/uploads && chown -R veyra:veyra public/uploads
+RUN mkdir -p uploads && chown -R veyra:veyra uploads
 USER veyra
 EXPOSE 3000
 CMD ["node", "server.js"]

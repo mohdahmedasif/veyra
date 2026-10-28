@@ -31,7 +31,7 @@ services:
     environment:
       DATABASE_URL: postgresql://veyra:${POSTGRES_PASSWORD:-veyra}@db:5432/veyra
     volumes:
-      - uploads:/app/public/uploads
+      - uploads:/app/uploads
     depends_on:
       migrate: { condition: service_completed_successfully }
 

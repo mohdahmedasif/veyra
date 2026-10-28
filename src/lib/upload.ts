@@ -3,6 +3,9 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 
+/** Local uploads live outside public/ — Next only serves public files that existed at build time. */
+export const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
+
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"]);
 
@@ -28,8 +31,7 @@ export async function storeImage(file: File): Promise<string> {
 
   const ext = file.type.split("/")[1].replace("jpeg", "jpg");
   const name = `${randomUUID()}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), buffer);
-  return `/uploads/${name}`;
+  await mkdir(UPLOAD_DIR, { recursive: true });
+  await writeFile(path.join(UPLOAD_DIR, name), buffer);
+  return `/media/${name}`;
 }

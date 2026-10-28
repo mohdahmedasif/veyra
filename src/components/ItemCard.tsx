@@ -4,7 +4,7 @@ import type { ClothingItem } from "@/types";
 import { label } from "@/types";
 import { resolveHex } from "@/lib/colors";
 
-export const isLocalUpload = (src: string) => src.startsWith("/uploads/");
+export const isLocalUpload = (src: string) => src.startsWith("/media/") || src.startsWith("/uploads/");
 
 export function ItemImage({ src, alt, sizes, className }: { src: string; alt: string; sizes: string; className?: string }) {
   // Files uploaded at runtime aren't known to the image optimizer, so serve them directly.

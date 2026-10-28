@@ -1,10 +1,12 @@
 /** Browser-only helpers: shrink phone photos and guess the garment's main color. */
 
+import { hexToHsl } from "./colors";
+
 export const SWATCHES: [string, string][] = [
   ["black", "#111111"], ["white", "#FFFFFF"], ["ivory", "#F5EFE6"], ["beige", "#D8CBB5"], ["camel", "#C19A6B"], ["brown", "#6B4423"],
-  ["grey", "#8C8C8C"], ["navy", "#1F2A44"], ["blue", "#4A78C2"], ["denim", "#5B7DB1"], ["green", "#3E8E5E"], ["olive", "#708238"],
+  ["grey", "#8C8C8C"], ["charcoal", "#3A3A3C"], ["navy", "#1F2A44"], ["blue", "#4A78C2"], ["denim", "#5B7DB1"], ["green", "#3E8E5E"], ["olive", "#708238"],
   ["sage", "#A3B18A"], ["red", "#C0392B"], ["burgundy", "#7B1E2B"], ["pink", "#E8A0B4"], ["purple", "#7D5BA6"], ["yellow", "#F4D03F"],
-  ["orange", "#E67E22"], ["gold", "#D4AF37"],
+  ["orange", "#E67E22"], ["gold", "#D4AF37"], ["tan", "#B08355"],
 ];
 
 const hex = (n: number) => n.toString(16).padStart(2, "0");
@@ -39,11 +41,35 @@ function dominantColor(ctx: CanvasRenderingContext2D, w: number, h: number): [st
   if (!all[3]) return null;
   if (n < all[3] * 0.15) [r, g, b, n] = all; // mostly white → it's probably a white garment
   const avg = [r / n, g / n, b / n];
-  let best = SWATCHES[0], dist = Infinity;
-  for (const s of SWATCHES) {
-    const v = parseInt(s[1].slice(1), 16);
-    const d = (avg[0] - (v >> 16)) ** 2 + (avg[1] - ((v >> 8) & 255)) ** 2 + (avg[2] - (v & 255)) ** 2;
-    if (d < dist) [best, dist] = [s, d];
+  const hexAvg = `#${avg.map((c) => hex(Math.round(c))).join("")}`.toUpperCase();
+  return [nameColor(hexAvg), hexAvg];
+}
+
+
+/**
+ * Names a measured color the way a person would. Plain RGB distance mislabels muted
+ * fabrics (a blue-grey chambray lands nearer "green" than "grey"), so muted colors are
+ * named by lightness + tint, and vivid ones by nearest hue.
+ */
+export function nameColor(hexValue: string): string {
+  const { h, s, l } = hexToHsl(hexValue);
+  if (l > 0.9) return "white";
+  if (l < 0.13) return "black";
+  if (s < 0.2) {
+    const blueish = h >= 190 && h <= 260 && s >= 0.05;
+    const warm = h >= 20 && h <= 60 && s >= 0.08;
+    if (blueish) return l < 0.28 ? "navy" : "denim";
+    if (warm) return l > 0.78 ? "ivory" : l > 0.55 ? "beige" : l > 0.32 ? "tan" : "brown";
+    return l > 0.78 ? "white" : l > 0.42 ? "grey" : l > 0.22 ? "charcoal" : "black";
   }
-  return [best[0], `#${avg.map((c) => hex(Math.round(c))).join("")}`.toUpperCase()];
+  // Vivid: closest chromatic swatch by hue, then lightness.
+  let best = "red", dist = Infinity;
+  for (const [name, hv] of SWATCHES) {
+    const o = hexToHsl(hv);
+    if (o.s < 0.2) continue;
+    const dh = Math.min(Math.abs(o.h - h), 360 - Math.abs(o.h - h)) / 180;
+    const d = dh * dh * 4 + (o.l - l) ** 2 + (o.s - s) ** 2 * 0.3;
+    if (d < dist) [best, dist] = [name, d];
+  }
+  return best;
 }

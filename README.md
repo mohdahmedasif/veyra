@@ -46,7 +46,7 @@ cp .env.example .env        # set NEXTAUTH_SECRET, NEXTAUTH_URL (your domain) an
 docker compose up -d --build
 ```
 
-This starts PostgreSQL, creates the tables, seeds the demo user and serves Veyra on port 3000 (set `PORT` to change it). Put a reverse proxy such as Nginx or Caddy in front of it for HTTPS. In production, set `CLOUDINARY_*` for photo uploads: images saved locally after the build may not be served by Next.js.
+This starts PostgreSQL, creates the tables, seeds the demo user and serves Veyra on port 3000 (set `PORT` to change it). Put a reverse proxy such as Nginx or Caddy in front of it for HTTPS. Photos are kept in the `uploads` volume. Set `CLOUDINARY_*` instead if you prefer cloud image hosting.
 
 ### Environment variables
 
@@ -57,7 +57,7 @@ This starts PostgreSQL, creates the tables, seeds the demo user and serves Veyra
 | `NEXTAUTH_SECRET` | ✅ | Session encryption secret |
 | `ENCRYPTION_KEY` | – | Encrypts the AI keys saved in Settings (defaults to `NEXTAUTH_SECRET`) |
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` | – | Fallback when no key is saved in Settings |
-| `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | – | Image hosting. Without these, uploads go to `public/uploads` (local dev only) |
+| `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | – | Image hosting. Without these, photos are saved to `./uploads` (or `UPLOAD_DIR`) and served from `/media` |
 
 ## Project structure
 
