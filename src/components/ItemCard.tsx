@@ -8,7 +8,9 @@ export const isLocalUpload = (src: string) => src.startsWith("/media/") || src.s
 
 export function ItemImage({ src, alt, sizes, className }: { src: string; alt: string; sizes: string; className?: string }) {
   // Files uploaded at runtime aren't known to the image optimizer, so serve them directly.
-  return <Image src={src} alt={alt} fill sizes={sizes} unoptimized={isLocalUpload(src)} className={clsx("object-cover", className)} />;
+  // Cleaned-up photos are transparent PNG cutouts: show the whole garment on the card's backdrop.
+  const cutout = src.endsWith(".png");
+  return <Image src={src} alt={alt} fill sizes={sizes} unoptimized={isLocalUpload(src)} className={clsx(cutout ? "object-contain p-[8%] drop-shadow-md" : "object-cover", className)} />;
 }
 
 export function ItemCard({

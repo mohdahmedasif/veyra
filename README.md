@@ -5,6 +5,7 @@
 ## Features
 
 - **Snap your clothes**: take photos of shirts, pants, dresses, shoes and more, several at once. With a Gemini or OpenAI key, Veyra recognizes each piece's type, color, season and occasions automatically. Without one, it guesses the color on the device and you tap the type. Photos are shrunk on the phone before uploading.
+- **Photo cleanup**: each photo has its background removed on the phone and is auto-cropped to the garment, giving a clean cutout. No key or cost is needed; the model (~40MB) downloads once and is then cached. There's a manual **Crop** tool and an **Original / Clean** toggle. Uses [`@imgly/background-removal`](https://github.com/imgly/background-removal-js) (AGPL-3.0).
 - **Automatic combos**: as soon as your closet has a top and a bottom (or a dress), the Combos page and dashboard build outfit combinations for you. You can filter them by occasion or season, ask the AI for fresh ideas, and tap ♥ to save.
 - **Household profiles**: one admin account and up to 8 Netflix-style profiles. Each profile has its own closet, outfits and style preferences, and unlocks with a 4–6 digit PIN. Five wrong PINs lock the profile for 5 minutes, and the admin can reset a PIN to clear the lock.
 - **Device pairing**: the admin generates a **one-time pairing key** in Settings → Devices. It's single use and expires after 10 minutes. Another phone or tablet enters it at `/pair` and is then trusted. Devices can be revoked at any time.
@@ -55,6 +56,7 @@ This starts PostgreSQL, creates the tables, seeds the demo user and serves Veyra
 | `DATABASE_URL` | ✅ | PostgreSQL connection string |
 | `NEXTAUTH_URL` | ✅ | App URL, e.g. `http://localhost:3000` |
 | `NEXTAUTH_SECRET` | ✅ | Session encryption secret |
+| `NEXT_PUBLIC_BG_REMOVAL_PATH` | – | Self-host the background-removal model (defaults to IMG.LY's CDN). Set at build time |
 | `ENCRYPTION_KEY` | – | Encrypts the AI keys saved in Settings (defaults to `NEXTAUTH_SECRET`) |
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` | – | Fallback when no key is saved in Settings |
 | `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | – | Image hosting. Without these, photos are saved to `./uploads` (or `UPLOAD_DIR`) and served from `/media` |

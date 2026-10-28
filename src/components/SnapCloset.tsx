@@ -4,7 +4,8 @@
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { prepareImage, SWATCHES } from "@/lib/image-client";
+import { cleanupPhoto, cropImage, prepareImage, SWATCHES, type CropRect } from "@/lib/image-client";
+import { CropEditor } from "./CropEditor";
 import { CATEGORIES, OCCASIONS, PROVIDER_LABEL, SEASONS, label, type AiProvider } from "@/types";
 import { Icon } from "./Icon";
 import { api, useToast } from "./Toast";
@@ -14,7 +15,11 @@ const CATEGORY_HINT: Record<string, string> = { TOP: "Shirt / top", BOTTOM: "Pan
 interface Draft {
   key: string;
   preview: string;
-  status: "uploading" | "ready" | "error";
+  status: "cleaning" | "uploading" | "ready" | "error";
+  progress?: number;
+  original: File; // resized original photo
+  cleaned?: File; // background removed + auto-cropped
+  current: File; // what gets saved (cleaned, original, or a manual crop of either)
   url?: string;
   detectedBy?: AiProvider | null;
   title: string;
@@ -36,34 +41,57 @@ export function SnapCloset({ aiReady }: { aiReady: boolean }) {
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
 
+  const [cropping, setCropping] = useState<Draft | null>(null);
   const update = (key: string, patch: Partial<Draft>) => setDrafts((ds) => ds.map((d) => (d.key === key ? { ...d, ...patch } : d)));
+  const show = (file: File) => URL.createObjectURL(file);
+
+  /** Uploads the draft's current image; on first upload also runs AI tagging. */
+  async function upload(key: string, file: File, color: [string, string] | null, analyze: boolean) {
+    update(key, { status: "uploading", current: file, preview: show(file) });
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      if (!analyze) {
+        const { url } = await api<{ url: string }>("/api/upload", { method: "POST", body: fd });
+        return update(key, { status: "ready", url });
+      }
+      const res = await api<{ url: string; detected: Detected | null; provider: AiProvider | null }>("/api/items/analyze", { method: "POST", body: fd });
+      const d = res.detected;
+      update(key, {
+        status: "ready",
+        url: res.url,
+        detectedBy: res.provider,
+        ...(d ? { title: d.title, category: d.category, color: d.color, colorHex: d.colorHex ?? color?.[1] ?? "#999999", season: d.season, occasions: d.occasions } : {}),
+      });
+    } catch (err) {
+      update(key, { status: "error" });
+      toast((err as Error).message, "error");
+    }
+  }
 
   async function addFiles(files: FileList | null) {
     if (!files?.length) return;
-    for (const original of Array.from(files)) {
+    for (const raw of Array.from(files)) {
       const key = `${Date.now()}-${Math.random()}`;
-      const draft: Draft = { key, preview: URL.createObjectURL(original), status: "uploading", title: "", category: null, color: "", colorHex: "#999999", season: "ALL", occasions: [], more: false };
-      setDrafts((ds) => [draft, ...ds]);
+      setDrafts((ds) => [
+        { key, preview: show(raw), status: "cleaning", original: raw, current: raw, title: "", category: null, color: "", colorHex: "#999999", season: "ALL", occasions: [], more: false },
+        ...ds,
+      ]);
       (async () => {
-        const { file, color } = await prepareImage(original);
+        const prepared = await prepareImage(raw);
+        update(key, { original: prepared.file });
+        const cleaned = await cleanupPhoto(raw, (progress) => update(key, { progress }));
+        const color = cleaned?.color ?? prepared.color;
         if (color) update(key, { color: color[0], colorHex: color[1] });
-        try {
-          const fd = new FormData();
-          fd.append("file", file);
-          const res = await api<{ url: string; detected: Detected | null; provider: AiProvider | null }>("/api/items/analyze", { method: "POST", body: fd });
-          const d = res.detected;
-          update(key, {
-            status: "ready",
-            url: res.url,
-            detectedBy: res.provider,
-            ...(d ? { title: d.title, category: d.category, color: d.color, colorHex: d.colorHex ?? color?.[1] ?? "#999999", season: d.season, occasions: d.occasions } : {}),
-          });
-        } catch (err) {
-          update(key, { status: "error" });
-          toast((err as Error).message, "error");
-        }
+        if (cleaned) update(key, { cleaned: cleaned.file });
+        await upload(key, cleaned?.file ?? prepared.file, color, true);
       })();
     }
+  }
+
+  async function applyCrop(d: Draft, rect: CropRect) {
+    setCropping(null);
+    await upload(d.key, await cropImage(d.current, rect), null, false);
   }
 
   const ready = drafts.filter((d) => d.status === "ready");
@@ -120,16 +148,34 @@ export function SnapCloset({ aiReady }: { aiReady: boolean }) {
         )}
       </div>
 
+      {cropping && <CropEditor src={cropping.preview} onCancel={() => setCropping(null)} onApply={(r) => applyCrop(cropping, r)} />}
+
       <div className="space-y-4">
         {drafts.map((d) => (
           <div key={d.key} className="card animate-fade-up overflow-hidden">
             <div className="flex gap-4 p-4">
-              <div className="relative h-36 w-28 shrink-0 overflow-hidden rounded-2xl bg-surface-2 sm:h-44 sm:w-36">
-                <img src={d.preview} alt="" className="h-full w-full object-cover" />
-                {d.status === "uploading" && (
-                  <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-ink/45 text-xs font-medium text-bg backdrop-blur-[2px]">
-                    <Icon name="sparkle" size={20} className="animate-spin" /> {aiReady ? "Recognizing…" : "Uploading…"}
-                  </span>
+              <div className="flex shrink-0 flex-col gap-2">
+                <div className="relative h-36 w-28 overflow-hidden rounded-2xl bg-surface-2 sm:h-44 sm:w-36">
+                  <img src={d.preview} alt="" className={clsx("h-full w-full", d.current.type === "image/png" ? "object-contain p-2" : "object-cover")} />
+                  {(d.status === "uploading" || d.status === "cleaning") && (
+                    <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-ink/45 px-2 text-center text-xs font-medium text-bg backdrop-blur-[2px]">
+                      <Icon name="sparkle" size={20} className="animate-spin" />
+                      {d.status === "cleaning" ? `Cleaning up…${d.progress && d.progress < 100 ? ` ${d.progress}%` : ""}` : aiReady ? "Recognizing…" : "Uploading…"}
+                    </span>
+                  )}
+                </div>
+                {d.status === "ready" && (
+                  <div className="flex gap-1">
+                    <button onClick={() => setCropping(d)} className="chip min-h-[30px] flex-1 justify-center px-2">Crop</button>
+                    {d.cleaned && (
+                      <button
+                        onClick={() => upload(d.key, d.current === d.original ? d.cleaned! : d.original, null, false)}
+                        className="chip min-h-[30px] flex-1 justify-center px-2"
+                      >
+                        {d.current === d.original ? "Clean" : "Original"}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="min-w-0 flex-1 space-y-3">
@@ -139,6 +185,7 @@ export function SnapCloset({ aiReady }: { aiReady: boolean }) {
                     <Icon name="x" size={16} />
                   </button>
                 </div>
+                {d.cleaned && d.current !== d.original && d.status === "ready" && <p className="text-xs text-success">✓ Background removed and cropped</p>}
                 {d.detectedBy && <p className="text-xs text-success">✓ Recognized by {PROVIDER_LABEL[d.detectedBy]} — check and adjust if needed</p>}
                 {d.status === "error" && <p className="text-xs text-danger">Upload failed — discard and try again.</p>}
                 <div className="flex flex-wrap gap-1.5">
@@ -184,8 +231,8 @@ export function SnapCloset({ aiReady }: { aiReady: boolean }) {
 
       {drafts.length > 0 && (
         <div className="sticky bottom-20 z-20 md:bottom-4">
-          <button onClick={saveAll} disabled={saving || !ready.length || drafts.some((d) => d.status === "uploading")} className="btn-primary w-full shadow-lift">
-            {saving ? "Saving…" : drafts.some((d) => d.status === "uploading") ? "Processing photos…" : `Save ${ready.length} piece${ready.length === 1 ? "" : "s"} & see combos`}
+          <button onClick={saveAll} disabled={saving || !ready.length || drafts.some((d) => d.status === "uploading" || d.status === "cleaning")} className="btn-primary w-full shadow-lift">
+            {saving ? "Saving…" : drafts.some((d) => d.status === "uploading" || d.status === "cleaning") ? "Processing photos…" : `Save ${ready.length} piece${ready.length === 1 ? "" : "s"} & see combos`}
           </button>
         </div>
       )}
