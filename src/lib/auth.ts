@@ -1,0 +1,50 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import bcrypt from "bcryptjs";
+import { getServerSession, type NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { redirect } from "next/navigation";
+import { prisma } from "./prisma";
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: "jwt" },
+  pages: { signIn: "/login" },
+  providers: [
+    CredentialsProvider({
+      name: "Email",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials.password) return null;
+        const user = await prisma.user.findUnique({ where: { email: credentials.email.toLowerCase() } });
+        if (!user?.passwordHash) return null;
+        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
+        return valid ? { id: user.id, email: user.email, name: user.name, image: user.image } : null;
+      },
+    }),
+  ],
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) session.user.id = token.id as string;
+      return session;
+    },
+  },
+};
+
+export async function getCurrentUserId() {
+  const session = await getServerSession(authOptions);
+  return session?.user?.id ?? null;
+}
+
+/** For server components: redirects to /login when signed out. */
+export async function requireUserId() {
+  const id = await getCurrentUserId();
+  if (!id) redirect("/login");
+  return id;
+}

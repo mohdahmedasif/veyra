@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  TOP
+  BOTTOM
+  DRESS
+  OUTERWEAR
+  SHOES
+  ACCESSORY
+  BAG
+}
+
+enum Season {
+  SPRING
+  SUMMER
+  AUTUMN
+  WINTER
+  ALL
+}
+
+enum Occasion {
+  CASUAL
+  WORK
+  FORMAL
+  PARTY
+  SPORT
+  DATE
+  TRAVEL
+}
+
+model User {
+  id               String           @id @default(cuid())
+  name             String?
+  email            String           @unique
+  emailVerified    DateTime?
+  passwordHash     String?
+  image            String?
+  stylePreferences String[]         @default([])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  accounts         Account[]
+  sessions         Session[]
+  items            ClothingItem[]
+  outfits          Outfit[]
+  favorites        FavoriteOutfit[]
+}
+
+model ClothingItem {
+  id        String       @id @default(cuid())
+  userId    String
+  title     String
+  category  Category
+  color     String
+  colorHex  String?
+  season    Season       @default(ALL)
+  occasions Occasion[]   @default([])
+  tags      Tag[]
+  imageUrl  String
+  brand     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfits   OutfitItem[]
+
+  @@index([userId, category])
+}
+
+model Outfit {
+  id         String           @id @default(cuid())
+  userId     String
+  name       String
+  occasion   Occasion?
+  score      Int?
+  notes      String?
+  aiReason   String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      OutfitItem[]
+  favorites  FavoriteOutfit[]
+
+  @@index([userId])
+}
+
+model OutfitItem {
+  outfitId String
+  itemId   String
+  position Int          @default(0)
+  outfit   Outfit       @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  item     ClothingItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@id([outfitId, itemId])
+}
+
+model FavoriteOutfit {
+  userId    String
+  outfitId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfit    Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+
+  @@id([userId, outfitId])
+}
+
+model Tag {
+  id    String         @id @default(cuid())
+  name  String         @unique
+  items ClothingItem[]
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
