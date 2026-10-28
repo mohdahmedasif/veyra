@@ -33,6 +33,15 @@ npm run db:seed             # demo user: demo@veyra.app / veyra123
 npm run dev                 # http://localhost:3000
 ```
 
+### Run with Docker (any server)
+
+```bash
+cp .env.example .env        # set NEXTAUTH_SECRET, NEXTAUTH_URL (your domain) and optional keys
+docker compose up -d --build
+```
+
+This starts PostgreSQL, creates the tables, seeds the demo user and serves Veyra on port 3000 (set `PORT` to change it). Put a reverse proxy such as Nginx or Caddy in front of it for HTTPS. In production, set `CLOUDINARY_*` for photo uploads: images saved locally after the build may not be served by Next.js.
+
 ### Environment variables
 
 | Variable | Required | Purpose |
