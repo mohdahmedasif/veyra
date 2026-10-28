@@ -3,28 +3,29 @@ import { EmptyState } from "@/components/EmptyState";
 import { OutfitActions } from "@/components/OutfitActions";
 import { OutfitCard } from "@/components/OutfitCard";
 import { PageHeader } from "@/components/PageHeader";
-import { requireUserId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireProfile } from "@/lib/session";
 
 export default async function FavoritesPage({ searchParams }: { searchParams: { all?: string } }) {
-  const userId = await requireUserId();
+  const { profile } = await requireProfile();
+  const profileId = profile.id;
   const showAll = searchParams.all === "1";
   const outfits = await prisma.outfit.findMany({
-    where: { userId, ...(showAll ? {} : { favorites: { some: { userId } } }) },
-    include: { items: { include: { item: true }, orderBy: { position: "asc" } }, favorites: { where: { userId } } },
+    where: { profileId, ...(showAll ? {} : { favorites: { some: { profileId } } }) },
+    include: { items: { include: { item: true }, orderBy: { position: "asc" } }, favorites: { where: { profileId } } },
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <div>
       <PageHeader eyebrow="Saved looks" title={showAll ? "All outfits" : "Favorites"}>
-        <div className="flex gap-2">
-          <Link href="/favorites" className={`chip ${!showAll ? "chip-active" : ""}`}>Favorites</Link>
-          <Link href="/favorites?all=1" className={`chip ${showAll ? "chip-active" : ""}`}>All outfits</Link>
+        <div className="inline-flex rounded-full border border-line bg-surface p-1">
+          <Link href="/favorites" className={`rounded-full px-4 py-2 text-sm ${!showAll ? "bg-ink text-bg" : "text-muted"}`}>Favorites</Link>
+          <Link href="/favorites?all=1" className={`rounded-full px-4 py-2 text-sm ${showAll ? "bg-ink text-bg" : "text-muted"}`}>All outfits</Link>
         </div>
       </PageHeader>
       {outfits.length ? (
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {outfits.map((o) => (
             <OutfitCard
               key={o.id}
@@ -38,6 +39,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: { 
         </div>
       ) : (
         <EmptyState
+          icon="heart"
           title={showAll ? "No outfits saved" : "No favorites yet"}
           body="Save looks from Mix & Match or the AI Stylist, then heart the ones you love."
           href="/ai"

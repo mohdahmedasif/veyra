@@ -26,26 +26,31 @@ const items: {
   { title: "Tan leather tote", category: "BAG", color: "tan", colorHex: "#B08355", season: "ALL", occasions: ["WORK", "TRAVEL"], imageUrl: img("photo-1584917865442-de89df76afd3") },
 ];
 
+const guestItems: typeof items = [
+  { title: "Navy oxford shirt", category: "TOP", color: "navy", colorHex: "#1F2A44", season: "ALL", occasions: ["WORK", "CASUAL"], imageUrl: img("photo-1596755094514-f87e34085b2c") },
+  { title: "Grey chinos", category: "BOTTOM", color: "grey", colorHex: "#8C8C8C", season: "ALL", occasions: ["WORK", "CASUAL"], imageUrl: img("photo-1473966968600-fa801b869a1a") },
+  { title: "White leather sneakers", category: "SHOES", color: "white", colorHex: "#FFFFFF", season: "ALL", occasions: ["CASUAL"], imageUrl: img("photo-1549298916-b41d501d3772") },
+];
+
 async function main() {
   const email = "demo@veyra.app";
   await prisma.user.deleteMany({ where: { email } });
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name: "Demo Stylist",
-      passwordHash: await bcrypt.hash("veyra123", 10),
-      stylePreferences: ["minimal", "elegant"],
-    },
+  const user = await prisma.user.create({ data: { email, name: "Demo Stylist", passwordHash: await bcrypt.hash("veyra123", 10) } });
+
+  const admin = await prisma.profile.create({
+    data: { ownerId: user.id, name: "Ava", isAdmin: true, avatarColor: "#B4645A", pinHash: await bcrypt.hash("1234", 10), stylePreferences: ["minimal", "elegant"] },
+  });
+  const guest = await prisma.profile.create({
+    data: { ownerId: user.id, name: "Sam", avatarColor: "#6F86A6", pinHash: await bcrypt.hash("0000", 10), stylePreferences: ["classic"] },
   });
 
   const created = [];
-  for (const item of items) {
-    created.push(await prisma.clothingItem.create({ data: { ...item, userId: user.id } }));
-  }
+  for (const item of items) created.push(await prisma.clothingItem.create({ data: { ...item, profileId: admin.id } }));
+  for (const item of guestItems) await prisma.clothingItem.create({ data: { ...item, profileId: guest.id } });
 
   const outfit = await prisma.outfit.create({
     data: {
-      userId: user.id,
+      profileId: admin.id,
       name: "Effortless Office",
       occasion: "WORK",
       score: 92,
@@ -55,9 +60,9 @@ async function main() {
       },
     },
   });
-  await prisma.favoriteOutfit.create({ data: { userId: user.id, outfitId: outfit.id } });
+  await prisma.favoriteOutfit.create({ data: { profileId: admin.id, outfitId: outfit.id } });
 
-  console.log(`Seeded ${created.length} items for ${email} (password: veyra123)`);
+  console.log(`Seeded ${email} (password: veyra123) with profiles Ava (PIN 1234, admin) and Sam (PIN 0000)`);
 }
 
 main()

@@ -4,6 +4,10 @@
 
 ## Features
 
+- **Household profiles**: one admin account and up to 8 Netflix-style profiles. Each profile has its own closet, outfits and style preferences, and unlocks with a 4–6 digit PIN. Five wrong PINs lock the profile for 5 minutes, and the admin can reset a PIN to clear the lock.
+- **Device pairing**: the admin generates a **one-time pairing key** in Settings → Devices. It's single use and expires after 10 minutes. Another phone or tablet enters it at `/pair` and is then trusted. Devices can be revoked at any time.
+- **Gemini / OpenAI in Settings**: the admin chooses Google Gemini, OpenAI or the built-in engine, and pastes in a key. Keys are encrypted with AES-256-GCM and never shown again. A Test key button checks that a key works.
+- **Light and dark mode** with the porcelain, espresso and rose-clay palette. Phones get a bottom tab bar and the app can be added to the home screen.
 - **Digital wardrobe**: upload or snap photos, then tag each piece with category, color, season and occasion. Filter by category, color or occasion.
 - **Mix & Match studio**: build outfits by hand and get a live style-match score and palette read.
 - **AI Stylist**: returns the top 3–5 outfits from your wardrobe for a chosen occasion and season. It uses OpenAI when `OPENAI_API_KEY` is set and otherwise falls back to Veyra's built-in color-theory engine, so it always works.
@@ -27,7 +31,7 @@ cp .env.example .env        # set DATABASE_URL and NEXTAUTH_SECRET (openssl rand
 # 3. Database (needs a running PostgreSQL)
 #    Quick option: docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=veyra postgres:16
 npm run db:push
-npm run db:seed             # demo user: demo@veyra.app / veyra123
+npm run db:seed             # admin demo@veyra.app / veyra123 · profiles Ava (PIN 1234), Sam (PIN 0000)
 
 # 4. Run
 npm run dev                 # http://localhost:3000
@@ -49,7 +53,8 @@ This starts PostgreSQL, creates the tables, seeds the demo user and serves Veyra
 | `DATABASE_URL` | ✅ | PostgreSQL connection string |
 | `NEXTAUTH_URL` | ✅ | App URL, e.g. `http://localhost:3000` |
 | `NEXTAUTH_SECRET` | ✅ | Session encryption secret |
-| `OPENAI_API_KEY` / `OPENAI_MODEL` | – | Turns on LLM styling (default model `gpt-4o-mini`) |
+| `ENCRYPTION_KEY` | – | Encrypts the AI keys saved in Settings (defaults to `NEXTAUTH_SECRET`) |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` | – | Fallback when no key is saved in Settings |
 | `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | – | Image hosting. Without these, uploads go to `public/uploads` (local dev only) |
 
 ## Project structure
@@ -115,6 +120,14 @@ src/
 ```
 
 An outfit is (top + bottom) or a dress, plus shoes when available. The engine then adds outerwear, an accessory and a bag only when they keep the palette harmonious. The score combines color harmony (55%), occasion fit (30%) and completeness (15%).
+
+## How access works
+
+1. The admin signs in with email and password. That browser is trusted automatically and the admin profile is unlocked.
+2. Other devices are paired with a one-time key and show **Who's dressing today?** Each person taps their avatar and enters their PIN.
+3. An unlocked profile stays unlocked for 12 hours, or until someone taps **Lock** in the profile menu.
+
+Upgrading from v1: the data model changed from users to profiles, so reset the database with `npx prisma db push --force-reset && npm run db:seed`.
 
 ## Scripts
 

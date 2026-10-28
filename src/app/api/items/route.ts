@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
-import { withUser } from "@/lib/api";
+import { withProfile } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { itemSchema } from "@/lib/validators";
 
-export const GET = withUser(async (userId, req: Request) => {
+export const GET = withProfile(async ({ profile }, req: Request) => {
   const q = new URL(req.url).searchParams;
-  const where: Prisma.ClothingItemWhereInput = { userId };
+  const where: Prisma.ClothingItemWhereInput = { profileId: profile.id };
   if (q.get("category")) where.category = q.get("category") as Prisma.ClothingItemWhereInput["category"];
   if (q.get("color")) where.color = { equals: q.get("color")!, mode: "insensitive" };
   if (q.get("occasion")) where.occasions = { has: q.get("occasion") as never };
@@ -14,8 +14,8 @@ export const GET = withUser(async (userId, req: Request) => {
   return NextResponse.json({ items });
 });
 
-export const POST = withUser(async (userId, req: Request) => {
+export const POST = withProfile(async ({ profile }, req: Request) => {
   const data = itemSchema.parse(await req.json());
-  const item = await prisma.clothingItem.create({ data: { ...data, color: data.color.toLowerCase(), userId } as Prisma.ClothingItemUncheckedCreateInput });
+  const item = await prisma.clothingItem.create({ data: { ...data, color: data.color.toLowerCase(), profileId: profile.id } as Prisma.ClothingItemUncheckedCreateInput });
   return NextResponse.json({ item }, { status: 201 });
 });

@@ -1,8 +1,7 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
-import { getServerSession, type NextAuthOptions } from "next-auth";
+import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { redirect } from "next/navigation";
 import { prisma } from "./prisma";
 
 export const authOptions: NextAuthOptions = {
@@ -36,15 +35,3 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
-
-export async function getCurrentUserId() {
-  const session = await getServerSession(authOptions);
-  return session?.user?.id ?? null;
-}
-
-/** For server components: redirects to /login when signed out. */
-export async function requireUserId() {
-  const id = await getCurrentUserId();
-  if (!id) redirect("/login");
-  return id;
-}

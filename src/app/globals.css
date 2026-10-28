@@ -2,18 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Veyra palette — porcelain, espresso, rose clay and champagne. Values are "R G B". */
+:root {
+  --bg: 250 247 242;          /* #FAF7F2 porcelain */
+  --surface: 255 255 255;
+  --surface-2: 243 237 229;   /* #F3EDE5 linen */
+  --ink: 35 26 22;            /* #231A16 espresso */
+  --muted: 120 106 98;        /* #786A62 */
+  --line: 232 223 212;        /* #E8DFD4 */
+  --accent: 180 100 90;       /* #B4645A rose clay */
+  --accent-ink: 255 255 255;
+  --accent-soft: 246 231 226; /* #F6E7E2 */
+  --gold: 200 169 106;        /* #C8A96A champagne */
+  --success: 74 124 89;
+  --danger: 178 62 62;
+  --shadow: 35 26 22;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 20 16 14;             /* #14100E espresso */
+  --surface: 30 25 22;        /* #1E1916 */
+  --surface-2: 41 35 31;      /* #29231F */
+  --ink: 243 236 228;         /* #F3ECE4 cream */
+  --muted: 168 154 144;
+  --line: 56 48 43;
+  --accent: 214 140 128;      /* #D68C80 soft rose */
+  --accent-ink: 20 16 14;
+  --accent-soft: 58 38 34;
+  --gold: 212 186 128;
+  --success: 120 180 135;
+  --danger: 230 120 110;
+  --shadow: 0 0 0;
+  color-scheme: dark;
+}
+
 @layer base {
-  body { @apply bg-ivory text-ink antialiased; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-bg text-ink antialiased transition-colors duration-300; }
   h1, h2, h3 { @apply font-serif tracking-tight; }
+  .font-serif, h1, h2, h3 { font-variant-numeric: lining-nums; }
+  ::selection { @apply bg-accent/25; }
 }
 
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition disabled:opacity-50; }
-  .btn-primary { @apply btn bg-ink text-ivory hover:bg-taupe-800; }
-  .btn-ghost { @apply btn border border-sand-200 bg-white/60 text-taupe-800 hover:bg-sand-50; }
-  .card { @apply rounded-3xl border border-sand-100 bg-white/80 shadow-soft backdrop-blur; }
-  .input { @apply w-full rounded-xl border border-sand-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blush-400 focus:ring-2 focus:ring-blush-100; }
-  .chip { @apply rounded-full border border-sand-200 px-3 py-1 text-xs text-taupe-600 transition; }
-  .chip-active { @apply border-ink bg-ink text-ivory; }
-  .eyebrow { @apply text-xs font-medium uppercase tracking-[0.2em] text-blush-600; }
+  .btn { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 text-sm font-medium transition active:scale-[.98] disabled:pointer-events-none disabled:opacity-50; }
+  .btn-primary { @apply btn bg-ink text-bg hover:opacity-90; }
+  .btn-accent { @apply btn bg-accent text-accent-ink hover:opacity-90; }
+  .btn-ghost { @apply btn border border-line bg-surface text-ink hover:bg-surface-2; }
+  .btn-danger { @apply btn border border-danger/30 text-danger hover:bg-danger/10; }
+  .card { @apply rounded-3xl border border-line bg-surface shadow-soft; }
+  .input { @apply min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-4 focus:ring-accent/15 sm:text-sm; }
+  .label { @apply mb-1.5 block text-sm font-medium text-muted; }
+  .chip { @apply inline-flex min-h-[36px] shrink-0 items-center rounded-full border border-line bg-surface px-3.5 text-xs font-medium text-muted transition hover:border-ink/40 hover:text-ink; }
+  .chip-active { @apply border-ink bg-ink text-bg hover:text-bg; }
+  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-accent; }
+  .scroll-row { @apply -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden; }
+  .skeleton { @apply animate-pulse rounded-2xl bg-surface-2; }
+}
+
+@layer utilities {
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .glow { background-image: radial-gradient(60% 50% at 15% 0%, rgb(var(--accent) / .14), transparent 70%), radial-gradient(50% 40% at 95% 20%, rgb(var(--gold) / .16), transparent 70%); }
 }

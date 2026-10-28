@@ -35,26 +35,80 @@ enum Occasion {
   TRAVEL
 }
 
+enum AiProvider {
+  ENGINE
+  OPENAI
+  GEMINI
+}
+
+/// The household's admin account (email/password). Owns profiles, devices and AI settings.
 model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String        @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  image         String?
+  aiProvider    AiProvider    @default(ENGINE)
+  openaiKeyEnc  String?
+  openaiModel   String?
+  geminiKeyEnc  String?
+  geminiModel   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  profiles      Profile[]
+  devices       Device[]
+  pairingCodes  PairingCode[]
+}
+
+/// A person in the household. Each has their own wardrobe and unlocks with a PIN.
+model Profile {
   id               String           @id @default(cuid())
-  name             String?
-  email            String           @unique
-  emailVerified    DateTime?
-  passwordHash     String?
-  image            String?
+  ownerId          String
+  name             String
+  avatarColor      String           @default("#B4645A")
+  pinHash          String
+  isAdmin          Boolean          @default(false)
   stylePreferences String[]         @default([])
+  failedAttempts   Int              @default(0)
+  lockedUntil      DateTime?
   createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  accounts         Account[]
-  sessions         Session[]
+  owner            User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   items            ClothingItem[]
   outfits          Outfit[]
   favorites        FavoriteOutfit[]
+
+  @@index([ownerId])
+}
+
+model Device {
+  id         String    @id @default(cuid())
+  ownerId    String
+  name       String
+  tokenHash  String    @unique
+  lastSeenAt DateTime  @default(now())
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+}
+
+model PairingCode {
+  id        String    @id @default(cuid())
+  ownerId   String
+  codeHash  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model ClothingItem {
   id        String       @id @default(cuid())
-  userId    String
+  profileId String
   title     String
   category  Category
   color     String
@@ -66,27 +120,27 @@ model ClothingItem {
   brand     String?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile   Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
   outfits   OutfitItem[]
 
-  @@index([userId, category])
+  @@index([profileId, category])
 }
 
 model Outfit {
-  id         String           @id @default(cuid())
-  userId     String
-  name       String
-  occasion   Occasion?
-  score      Int?
-  notes      String?
-  aiReason   String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items      OutfitItem[]
-  favorites  FavoriteOutfit[]
+  id        String           @id @default(cuid())
+  profileId String
+  name      String
+  occasion  Occasion?
+  score     Int?
+  notes     String?
+  aiReason  String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  profile   Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  items     OutfitItem[]
+  favorites FavoriteOutfit[]
 
-  @@index([userId])
+  @@index([profileId])
 }
 
 model OutfitItem {
@@ -100,13 +154,13 @@ model OutfitItem {
 }
 
 model FavoriteOutfit {
-  userId    String
+  profileId String
   outfitId  String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   outfit    Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
 
-  @@id([userId, outfitId])
+  @@id([profileId, outfitId])
 }
 
 model Tag {

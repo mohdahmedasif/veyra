@@ -1,27 +1,40 @@
 import type { Config } from "tailwindcss";
 
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        ivory: "#FBF8F4",
-        sand: { 50: "#F7F1EA", 100: "#EFE4D6", 200: "#E2D0BA", 300: "#CFB394" },
-        blush: { 100: "#F6E6E1", 200: "#EDCFC6", 400: "#D79A8A", 600: "#B06A5A" },
-        taupe: { 400: "#9B8B7E", 600: "#6E6058", 800: "#3E3530" },
-        ink: "#221C19",
+        bg: token("bg"),
+        surface: token("surface"),
+        "surface-2": token("surface-2"),
+        ink: token("ink"),
+        muted: token("muted"),
+        line: token("line"),
+        accent: token("accent"),
+        "accent-ink": token("accent-ink"),
+        "accent-soft": token("accent-soft"),
+        gold: token("gold"),
+        success: token("success"),
+        danger: token("danger"),
       },
       fontFamily: {
         serif: ["var(--font-serif)", "Georgia", "serif"],
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        soft: "0 10px 30px -12px rgba(62, 53, 48, 0.18)",
+        soft: "0 1px 2px rgb(var(--shadow) / 0.04), 0 12px 32px -12px rgb(var(--shadow) / 0.18)",
+        lift: "0 20px 48px -16px rgb(var(--shadow) / 0.28)",
       },
-      backgroundImage: {
-        "veyra-glow":
-          "radial-gradient(60% 60% at 20% 10%, #F6E6E1 0%, transparent 60%), radial-gradient(50% 50% at 90% 30%, #EFE4D6 0%, transparent 60%)",
+      borderRadius: { "4xl": "2rem" },
+      keyframes: {
+        "fade-up": { from: { opacity: "0", transform: "translateY(8px)" }, to: { opacity: "1", transform: "none" } },
+        shake: { "10%,90%": { transform: "translateX(-2px)" }, "20%,80%": { transform: "translateX(4px)" }, "30%,50%,70%": { transform: "translateX(-8px)" }, "40%,60%": { transform: "translateX(8px)" } },
       },
+      animation: { "fade-up": "fade-up .35s ease-out both", shake: "shake .45s ease-in-out" },
     },
   },
   plugins: [],

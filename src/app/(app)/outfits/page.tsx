@@ -1,14 +1,14 @@
 import { MixMatch } from "@/components/MixMatch";
 import { PageHeader } from "@/components/PageHeader";
-import { requireUserId } from "@/lib/auth";
+import { requireProfile } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export default async function OutfitsPage() {
-  const userId = await requireUserId();
-  const items = await prisma.clothingItem.findMany({ where: { userId }, orderBy: { category: "asc" } });
+  const { profile } = await requireProfile();
+  const items = await prisma.clothingItem.findMany({ where: { profileId: profile.id }, orderBy: { category: "asc" } });
   return (
     <div>
-      <PageHeader eyebrow="Mix & Match" title="Compose a look" />
+      <PageHeader eyebrow="Mix & Match" title="Compose a look" subtitle="Tap pieces to build an outfit — the score updates live." />
       <MixMatch items={items} />
     </div>
   );
