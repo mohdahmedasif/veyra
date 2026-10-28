@@ -25,37 +25,47 @@ export function generateOutfits(
     ...tops.flatMap((t) => bottoms.map((b) => [t, b])),
     ...dresses.map((d) => [d]),
   ];
-  const withShoes = shoes.length ? bases.flatMap((b) => shoes.map((s) => [...b, s])) : bases;
 
-  const candidates = withShoes.map((base) => {
-    const extras = [outer, accessories, bags]
-      .map((group) => bestAddition(base, group))
-      .filter((x): x is ClothingItem => Boolean(x));
-    return score([...base, ...extras], occasion ?? null);
-  });
+  // Rank each base by its best possible core (base + best shoes), so every
+  // top/bottom pairing or dress shows up at most once.
+  const ranked = bases
+    .map((base) => ({ base, best: Math.max(...(shoes.length ? shoes : [null]).map((sh) => score(sh ? [...base, sh] : base, occasion ?? null).score)) }))
+    .sort((a, b) => b.best - a.best);
 
-  candidates.sort((a, b) => b.score - a.score);
-
-  // Encourage variety: avoid repeating the same base piece too often.
+  // Greedy pick with usage counts so shoes, jackets and accessories rotate instead of
+  // the single "safest" piece appearing in every outfit.
   const used = new Map<string, number>();
+  const uses = (i: ClothingItem) => used.get(i.id) ?? 0;
   const picked: OutfitSuggestion[] = [];
-  for (const c of candidates) {
-    if (c.itemIds.slice(0, 2).some((id) => (used.get(id) ?? 0) >= 2)) continue;
-    c.itemIds.slice(0, 2).forEach((id) => used.set(id, (used.get(id) ?? 0) + 1));
-    picked.push(c);
+  for (const { base } of ranked) {
+    if (base.some((i) => uses(i) >= 2)) continue; // a top/bottom/dress leads at most two looks
+    const outfit = [...base];
+    const shoe = pickRotating(shoes, (sh) => score([...base, sh], occasion ?? null).score, uses, 4);
+    if (shoe) outfit.push(shoe);
+    for (const group of [outer, accessories, bags]) {
+      const extra = pickRotating(
+        group.filter((g) => paletteHarmony([...outfit, g]).harmony > 0.75), // only if the palette stays strong
+        (g) => paletteHarmony([...outfit, g]).harmony * 100,
+        uses,
+        10,
+      );
+      if (extra) outfit.push(extra);
+    }
+    outfit.forEach((i) => used.set(i.id, uses(i) + 1));
+    picked.push(score(outfit, occasion ?? null));
     if (picked.length >= count) break;
   }
-  return picked;
+  return picked.sort((a, b) => b.score - a.score);
 }
 
-function bestAddition(base: ClothingItem[], group: ClothingItem[]) {
-  let best: ClothingItem | undefined;
-  let bestHarmony = 0.75; // only add if it keeps the palette strong
-  for (const g of group) {
-    const { harmony } = paletteHarmony([...base, g]);
-    if (harmony > bestHarmony) [best, bestHarmony] = [g, harmony];
-  }
-  return best;
+/** Best-scoring option, but prefers less-used pieces when they're within `slack` points of the best. */
+function pickRotating(options: ClothingItem[], rate: (i: ClothingItem) => number, uses: (i: ClothingItem) => number, slack: number) {
+  if (!options.length) return undefined;
+  const rated = options.map((o) => ({ o, r: rate(o) }));
+  const top = Math.max(...rated.map((x) => x.r));
+  return rated
+    .filter((x) => x.r >= top - slack)
+    .sort((a, b) => uses(a.o) - uses(b.o) || b.r - a.r)[0].o;
 }
 
 function score(items: ClothingItem[], occasion: Occasion | null): OutfitSuggestion {

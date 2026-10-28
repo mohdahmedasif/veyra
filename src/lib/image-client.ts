@@ -29,23 +29,31 @@ export async function prepareImage(file: File): Promise<{ file: File; color: [st
   }
 }
 
-/** Average of the central area (where the garment usually is), ignoring near-white background pixels, snapped to a named swatch. */
+/**
+ * Main color of the central area (where the garment usually is). Each sampled pixel is named
+ * (navy, red, white…) and the most common name wins — averaging would turn red-and-navy
+ * plaid into purple. Transparent pixels (removed background) are skipped.
+ */
 function dominantColor(ctx: CanvasRenderingContext2D, w: number, h: number): [string, string] | null {
-  const { data } = ctx.getImageData(Math.round(w * 0.3), Math.round(h * 0.3), Math.max(1, Math.round(w * 0.4)), Math.max(1, Math.round(h * 0.4)));
-  let r = 0, g = 0, b = 0, n = 0, all = [0, 0, 0, 0];
-  for (let i = 0; i < data.length; i += 16) {
-    if (data[i + 3] < 128) continue; // transparent (background already removed)
-    all = [all[0] + data[i], all[1] + data[i + 1], all[2] + data[i + 2], all[3] + 1];
-    if (data[i] > 235 && data[i + 1] > 235 && data[i + 2] > 235) continue;
-    r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+  const { data } = ctx.getImageData(Math.round(w * 0.2), Math.round(h * 0.2), Math.max(1, Math.round(w * 0.6)), Math.max(1, Math.round(h * 0.6)));
+  const votes = new Map<string, { n: number; r: number; g: number; b: number }>();
+  let opaque = 0, whiteish = 0;
+  for (let i = 0; i < data.length; i += 4 * 7) {
+    if (data[i + 3] < 128) continue;
+    opaque++;
+    const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
+    const name = nameColor(`#${hex(r)}${hex(g)}${hex(b)}`);
+    if (name === "white") whiteish++;
+    const v = votes.get(name) ?? { n: 0, r: 0, g: 0, b: 0 };
+    votes.set(name, { n: v.n + 1, r: v.r + r, g: v.g + g, b: v.b + b });
   }
-  if (!all[3]) return null;
-  if (n < all[3] * 0.15) [r, g, b, n] = all; // mostly white → it's probably a white garment
-  const avg = [r / n, g / n, b / n];
-  const hexAvg = `#${avg.map((c) => hex(Math.round(c))).join("")}`.toUpperCase();
-  return [nameColor(hexAvg), hexAvg];
+  if (!opaque) return null;
+  // Photos that weren't cleaned often sit on a white backdrop: ignore white unless it dominates.
+  if (whiteish < opaque * 0.45) votes.delete("white");
+  const [name, v] = Array.from(votes.entries()).sort((a, b) => b[1].n - a[1].n)[0] ?? [];
+  if (!name || !v) return null;
+  return [name, `#${[v.r, v.g, v.b].map((c) => hex(Math.round(c / v.n))).join("")}`.toUpperCase()];
 }
-
 
 /**
  * Names a measured color the way a person would. Plain RGB distance mislabels muted
