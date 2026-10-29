@@ -34,7 +34,7 @@ cp .env.example .env        # set DATABASE_URL and ADMIN_KEY (openssl rand -base
 # 3. Database (needs a running PostgreSQL)
 #    Quick option: docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=veyra postgres:16
 npm run db:push
-npm run db:seed             # demo profiles Ava (PIN 1234) and Sam (PIN 0000)
+npm run db:seed             # optional demo household
 
 # 4. Run
 npm run dev                 # http://localhost:3000
