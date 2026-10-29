@@ -18,7 +18,7 @@ export function OutfitCard({
   const shown = items.slice(0, 4);
   return (
     <div className="card animate-fade-up overflow-hidden">
-      <div className={`grid gap-1 bg-surface-2 p-1 ${shown.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+      <div className={`grid gap-1 bg-photo p-1 ${shown.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
         {shown.map((i, idx) => (
           <div key={i.id} className={`relative overflow-hidden rounded-2xl ${shown.length === 3 && idx === 0 ? "row-span-2" : "aspect-square"}`}>
             <ItemImage src={i.imageUrl} alt={i.title} sizes="(min-width: 768px) 16vw, 45vw" />

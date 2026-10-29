@@ -18,6 +18,7 @@ const config: Config = {
         "accent-ink": token("accent-ink"),
         "accent-soft": token("accent-soft"),
         gold: token("gold"),
+        photo: token("photo"),
         success: token("success"),
         danger: token("danger"),
       },

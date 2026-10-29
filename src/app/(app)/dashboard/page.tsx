@@ -22,7 +22,7 @@ export default async function Dashboard() {
     prisma.favoriteOutfit.count({ where: { profileId } }),
     prisma.clothingItem.groupBy({ by: ["category"], where: { profileId }, _count: { _all: true } }),
     prisma.outfit.findMany({
-      where: { profileId },
+      where: { profileId, items: { some: {} } },
       take: 3,
       orderBy: { createdAt: "desc" },
       include: { items: { include: { item: true }, orderBy: { position: "asc" } } },
@@ -63,11 +63,11 @@ export default async function Dashboard() {
         <section>
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="text-2xl">Recently added</h2>
-            <Link href="/wardrobe" className="text-sm text-muted hover:text-ink">See all →</Link>
+            <Link href="/wardrobe" className="-my-2 py-2 text-sm text-muted hover:text-ink">See all →</Link>
           </div>
-          <div className="scroll-row !flex-nowrap">
+          <div className="scroll-row !flex-nowrap md:!mx-0 md:grid md:grid-cols-8 md:!px-0">
             {newest.slice(0, 8).map((i) => (
-              <Link key={i.id} href="/wardrobe" className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-2xl border border-line md:w-36">
+              <Link key={i.id} href="/wardrobe" className="relative aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-2xl border border-line bg-photo md:w-auto">
                 <ItemImage src={i.imageUrl} alt={i.title} sizes="144px" />
               </Link>
             ))}
@@ -86,7 +86,7 @@ export default async function Dashboard() {
         <section>
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="text-2xl">Today&apos;s combos</h2>
-            <Link href="/combos" className="text-sm text-muted hover:text-ink">All combos →</Link>
+            <Link href="/combos" className="-my-2 py-2 text-sm text-muted hover:text-ink">All combos →</Link>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {todays.map((s) => (

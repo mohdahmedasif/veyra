@@ -15,5 +15,7 @@ export const PATCH = withProfile(async ({ profile }, req: Request, { params }: C
 
 export const DELETE = withProfile(async ({ profile }, _req: Request, { params }: Ctx) => {
   const { count } = await prisma.clothingItem.deleteMany({ where: { id: params.id, profileId: profile.id } });
+  // Outfits whose pieces are all gone would show as blank cards — remove them too.
+  if (count) await prisma.outfit.deleteMany({ where: { profileId: profile.id, items: { none: {} } } });
   return count ? new NextResponse(null, { status: 204 }) : NextResponse.json({ error: "Not found" }, { status: 404 });
 });

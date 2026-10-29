@@ -36,7 +36,7 @@ export function ProfilePicker({ profiles, next }: { profiles: P[]; next: string 
   }
 
   const back = profiles.length > 0 && (
-    <button onClick={() => go({ kind: "pick" })} className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-ink">
+    <button onClick={() => go({ kind: "pick" })} className="mb-4 inline-flex min-h-[44px] items-center gap-1 px-2 text-sm text-muted hover:text-ink">
       <Icon name="chevron" size={16} className="rotate-180" /> All profiles
     </button>
   );
@@ -71,7 +71,7 @@ export function ProfilePicker({ profiles, next }: { profiles: P[]; next: string 
         <p className="mb-8 mt-1 min-h-5 max-w-xs text-center text-sm text-muted">{error ? <span className="text-danger">{error}</span> : "Enter your PIN"}</p>
         <PinPad value={pin} onChange={(v) => { setPin(v); setError(""); }} maxLength={8} disabled={busy} error={Boolean(error)}
           onSubmit={() => run(() => api(`/api/profiles/${mode.p.id}/unlock`, { method: "POST", json: { pin } }))} />
-        <button onClick={() => go({ kind: "reset", p: mode.p })} className="mt-8 text-sm text-muted underline-offset-4 hover:text-ink hover:underline">Forgot PIN?</button>
+        <button onClick={() => go({ kind: "reset", p: mode.p })} className="mt-6 min-h-[44px] px-3 text-sm text-muted underline-offset-4 hover:text-ink hover:underline">Forgot PIN?</button>
       </div>
     );
 

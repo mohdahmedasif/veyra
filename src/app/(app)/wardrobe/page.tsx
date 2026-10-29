@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Category, Occasion, Prisma } from "@prisma/client";
 import { DeleteItemButton } from "@/components/DeleteItemButton";
 import { EmptyState } from "@/components/EmptyState";
-import { Icon } from "@/components/Icon";
 import { ItemCard } from "@/components/ItemCard";
 import { PageHeader } from "@/components/PageHeader";
 import { prisma } from "@/lib/prisma";
@@ -41,9 +40,7 @@ export default async function WardrobePage({ searchParams }: { searchParams: Sea
 
   return (
     <div>
-      <PageHeader eyebrow="Wardrobe" title="Your closet" subtitle={`${total} piece${total === 1 ? "" : "s"}${filtered ? ` · showing ${items.length}` : ""}`}>
-        <Link href="/wardrobe/new" className="btn-primary hidden md:inline-flex"><Icon name="camera" size={16} /> Snap clothes</Link>
-      </PageHeader>
+      <PageHeader eyebrow="Wardrobe" title="Your closet" subtitle={`${total} piece${total === 1 ? "" : "s"}${filtered ? ` · showing ${items.length}` : ""}`} />
 
       {total > 0 && (
         <div className="mb-6 space-y-2.5">

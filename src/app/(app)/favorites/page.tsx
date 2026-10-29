@@ -11,7 +11,7 @@ export default async function FavoritesPage({ searchParams }: { searchParams: { 
   const profileId = profile.id;
   const showAll = searchParams.all === "1";
   const outfits = await prisma.outfit.findMany({
-    where: { profileId, ...(showAll ? {} : { favorites: { some: { profileId } } }) },
+    where: { profileId, items: { some: {} }, ...(showAll ? {} : { favorites: { some: { profileId } } }) },
     include: { items: { include: { item: true }, orderBy: { position: "asc" } }, favorites: { where: { profileId } } },
     orderBy: { createdAt: "desc" },
   });

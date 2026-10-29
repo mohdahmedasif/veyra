@@ -35,7 +35,7 @@ export function ItemCard({
         selected ? "border-accent ring-2 ring-accent" : "border-line",
       )}
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-surface-2">
+      <div className="relative aspect-[3/4] overflow-hidden bg-photo">
         <ItemImage src={item.imageUrl} alt={item.title} sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw" className="transition duration-500 group-hover:scale-105" />
         {selected && (
           <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-accent text-sm text-accent-ink shadow">✓</span>

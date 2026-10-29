@@ -17,6 +17,7 @@
   --success: 74 124 89;
   --danger: 178 62 62;
   --shadow: 35 26 22;
+  --photo: 241 235 227;       /* studio backdrop behind clothing photos */
   color-scheme: light;
 }
 
@@ -34,6 +35,7 @@
   --success: 120 180 135;
   --danger: 230 120 110;
   --shadow: 0 0 0;
+  --photo: 214 206 196;       /* stays light so black clothes remain visible */
   color-scheme: dark;
 }
 
@@ -52,7 +54,7 @@
   .btn-ghost { @apply btn border border-line bg-surface text-ink hover:bg-surface-2; }
   .btn-danger { @apply btn border border-danger/30 text-danger hover:bg-danger/10; }
   .card { @apply rounded-3xl border border-line bg-surface shadow-soft; }
-  .input { @apply min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-4 focus:ring-accent/15 sm:text-sm; }
+  .input { @apply placeholder:font-sans placeholder:tracking-normal min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-4 focus:ring-accent/15 sm:text-sm; }
   .label { @apply mb-1.5 block text-sm font-medium text-muted; }
   .chip { @apply inline-flex min-h-[36px] shrink-0 items-center rounded-full border border-line bg-surface px-3.5 text-xs font-medium text-muted transition hover:border-ink/40 hover:text-ink; }
   .chip-active { @apply border-ink bg-ink text-bg hover:text-bg; }

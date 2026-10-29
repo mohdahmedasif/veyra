@@ -69,7 +69,7 @@ export function MixMatch({ items }: { items: ClothingItem[] }) {
       {chosen.length ? (
         <div className="grid grid-cols-4 gap-2">
           {chosen.map((i) => (
-            <button key={i.id} onClick={() => toggle(i.id)} title={`Remove ${i.title}`} className="group relative aspect-square overflow-hidden rounded-xl border border-line">
+            <button key={i.id} onClick={() => toggle(i.id)} title={`Remove ${i.title}`} className="group relative aspect-square overflow-hidden rounded-xl border border-line bg-photo">
               <ItemImage src={i.imageUrl} alt={i.title} sizes="80px" />
               <span className="absolute inset-0 flex items-center justify-center bg-ink/50 text-bg opacity-0 transition group-hover:opacity-100"><Icon name="x" size={18} /></span>
             </button>
@@ -102,7 +102,7 @@ export function MixMatch({ items }: { items: ClothingItem[] }) {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <div className="min-w-0">
+      <div className="min-w-0 pb-24 lg:pb-0">
         <div className="scroll-row mb-4">
           {present.map((c) => (
             <button key={c} onClick={() => setCategory(c)} className={clsx("chip gap-1.5", category === c && "chip-active")}>
@@ -136,7 +136,7 @@ export function MixMatch({ items }: { items: ClothingItem[] }) {
           <button onClick={() => setSheet((s) => !s)} className="flex w-full items-center gap-3 px-4 py-3">
             <span className="flex -space-x-3">
               {chosen.slice(0, 4).map((i) => (
-                <span key={i.id} className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-surface">
+                <span key={i.id} className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-surface bg-photo">
                   <ItemImage src={i.imageUrl} alt="" sizes="40px" />
                 </span>
               ))}

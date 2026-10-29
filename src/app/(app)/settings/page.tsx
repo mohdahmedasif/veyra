@@ -56,7 +56,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { t
     <div>
       <PageHeader eyebrow="Settings" title="Settings" />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10">
-        <nav className="scroll-row md:mx-0 md:flex-col md:flex-nowrap md:px-0">
+        <nav className="flex flex-wrap gap-2 md:flex-col md:flex-nowrap md:gap-1">
           {TABS.map((t, i) => (
             <div key={t.id} className="contents">
               {i === 2 && <p className="hidden px-4 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted md:block">Household {admin ? "· unlocked" : "· admin key"}</p>}
