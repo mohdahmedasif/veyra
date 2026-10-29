@@ -23,8 +23,8 @@ const config: Config = {
         danger: token("danger"),
       },
       fontFamily: {
-        serif: ["var(--font-serif)", "Georgia", "serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        serif: ["\"Cormorant Garamond\"", "Georgia", "serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
       },
       boxShadow: {
         soft: "0 1px 2px rgb(var(--shadow) / 0.04), 0 12px 32px -12px rgb(var(--shadow) / 0.18)",
