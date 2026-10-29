@@ -30,6 +30,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://veyra:${POSTGRES_PASSWORD:-veyra}@db:5432/veyra
+      TRUST_PROXY: ${TRUST_PROXY:-0}
     volumes:
       - uploads:/app/uploads
     depends_on:

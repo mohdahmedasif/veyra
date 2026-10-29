@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 
 export default async function CombosPage() {
-  const { ownerId, profile } = await requireProfile();
-  const [items, ai] = await Promise.all([prisma.clothingItem.findMany({ where: { profileId: profile.id } }), resolveAi(ownerId)]);
+  const { profile } = await requireProfile();
+  const [items, ai] = await Promise.all([prisma.clothingItem.findMany({ where: { profileId: profile.id } }), resolveAi()]);
   return (
     <div>
       <PageHeader eyebrow="Combos" title="Outfits from your closet" subtitle={items.length ? `Made from your ${items.length} pieces — tap a heart to save one.` : undefined} />

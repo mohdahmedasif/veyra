@@ -27,7 +27,6 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
 export interface NavProfile {
   name: string;
   avatarColor: string;
-  isAdmin: boolean;
 }
 
 export function AppNav({ profile }: { profile: NavProfile }) {
@@ -81,7 +80,7 @@ export function AppNav({ profile }: { profile: NavProfile }) {
                     <Avatar name={profile.name} color={profile.avatarColor} size={36} />
                     <div className="min-w-0">
                       <p className="truncate font-medium">{profile.name}</p>
-                      <p className="text-xs text-muted">{profile.isAdmin ? "Household admin" : "Member"}</p>
+                      <p className="text-xs text-muted">Unlocked on this device</p>
                     </div>
                   </div>
                   <div className="my-1 border-t border-line" />

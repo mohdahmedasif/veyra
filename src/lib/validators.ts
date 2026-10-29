@@ -1,20 +1,12 @@
 import { z } from "zod";
 import { CATEGORIES, OCCASIONS, SEASONS } from "@/types";
 
-export const pinSchema = z.string().regex(/^\d{4,6}$/, "PIN must be 4–6 digits");
-
-export const registerSchema = z.object({
-  name: z.string().min(1).max(80),
-  email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  pin: pinSchema,
-});
+export const pinSchema = z.string().regex(/^\d{4,8}$/, "PIN must be 4–8 digits");
 
 export const profileCreateSchema = z.object({
   name: z.string().trim().min(1).max(40),
   pin: pinSchema,
   avatarColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
-  isAdmin: z.boolean().optional(),
 });
 
 export const aiSettingsSchema = z.object({

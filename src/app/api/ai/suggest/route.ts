@@ -6,9 +6,9 @@ import { withProfile } from "@/lib/api";
 import { prisma } from "@/lib/prisma";
 import { suggestSchema } from "@/lib/validators";
 
-export const POST = withProfile(async ({ ownerId, profile }, req: Request) => {
+export const POST = withProfile(async ({ profile }, req: Request) => {
   const opts = suggestSchema.parse(await req.json().catch(() => ({})));
-  const [wardrobe, ai] = await Promise.all([prisma.clothingItem.findMany({ where: { profileId: profile.id } }), resolveAi(ownerId)]);
+  const [wardrobe, ai] = await Promise.all([prisma.clothingItem.findMany({ where: { profileId: profile.id } }), resolveAi()]);
   const result = await suggestOutfits(ai, wardrobe, {
     occasion: opts.occasion as Occasion | null | undefined,
     season: opts.season as Season | null | undefined,

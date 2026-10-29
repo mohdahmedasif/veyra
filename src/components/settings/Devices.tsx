@@ -43,11 +43,11 @@ export function Devices({ devices }: { devices: D[] }) {
   }
 
   async function revoke(d: D) {
-    if (!confirm(d.current ? "Unpair this device? You'll need to sign in or use a pairing key again." : `Revoke ${d.name}? It will be signed out immediately.`)) return;
+    if (!confirm(d.current ? "Unpair this device? You'll need the admin key or a pairing key again." : `Revoke ${d.name}? It will be signed out immediately.`)) return;
     try {
       if (d.current) {
         await api("/api/devices/self", { method: "DELETE" });
-        window.location.href = "/login";
+        window.location.href = "/pair";
         return;
       }
       await api(`/api/admin/devices/${d.id}`, { method: "DELETE" });
@@ -60,7 +60,7 @@ export function Devices({ devices }: { devices: D[] }) {
 
   return (
     <div className="space-y-6">
-      <Section title="Pair a new device" description="Generate a one-time key, then open Veyra on the other device and enter it on the pairing screen.">
+      <Section title="Pair a new device" description="Handy for kids' or guests' phones: a single-use key that pairs one device without sharing the admin key.">
         {pairing ? (
           <div className="glow rounded-2xl border border-line p-6 text-center">
             <p className="font-mono text-4xl font-semibold tracking-[0.25em] md:text-5xl" aria-label="Pairing key">{pairing.code}</p>
@@ -83,7 +83,7 @@ export function Devices({ devices }: { devices: D[] }) {
         )}
       </Section>
 
-      <Section title="Paired devices" description="Devices that can show the profile screen.">
+      <Section title="Paired devices" description="Browsers paired with this household. Revoking one signs it out immediately.">
         <ul className="divide-y divide-line">
           {devices.map((d) => (
             <li key={d.id} className="flex items-center gap-3 py-3">

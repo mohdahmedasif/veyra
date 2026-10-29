@@ -1,18 +1,17 @@
 import Link from "next/link";
 import clsx from "clsx";
-import { cookies } from "next/headers";
 import { Icon, type IconName } from "@/components/Icon";
 import { PageHeader } from "@/components/PageHeader";
+import { AdminGate } from "@/components/settings/AdminGate";
 import { AiSettings } from "@/components/settings/AiSettings";
 import { Appearance } from "@/components/settings/Appearance";
 import { Devices } from "@/components/settings/Devices";
 import { HouseholdProfiles } from "@/components/settings/HouseholdProfiles";
 import { ProfileForm } from "@/components/settings/ProfileForm";
-import { DEFAULT_MODELS } from "@/lib/ai/config";
-import { decrypt, mask, sha256 } from "@/lib/crypto";
+import { DEFAULT_MODELS, getHousehold } from "@/lib/ai/config";
+import { decrypt, mask } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
-import { DEVICE_COOKIE } from "@/lib/profile-token";
-import { requireProfile } from "@/lib/session";
+import { hasAdmin, requireProfile } from "@/lib/session";
 
 const TABS: { id: string; label: string; icon: IconName; admin?: boolean }[] = [
   { id: "profile", label: "My profile", icon: "user" },
@@ -23,27 +22,25 @@ const TABS: { id: string; label: string; icon: IconName; admin?: boolean }[] = [
 ];
 
 export default async function SettingsPage({ searchParams }: { searchParams: { tab?: string } }) {
-  const { ownerId, profile } = await requireProfile();
-  const tabs = TABS.filter((t) => !t.admin || profile.isAdmin);
-  const tab = tabs.find((t) => t.id === searchParams.tab)?.id ?? "profile";
+  const { profile, device } = await requireProfile();
+  const tab = TABS.find((t) => t.id === searchParams.tab) ?? TABS[0];
+  const admin = hasAdmin(device.id);
 
   let body: React.ReactNode;
-  if (tab === "profile") body = <ProfileForm profile={{ name: profile.name, avatarColor: profile.avatarColor, stylePreferences: profile.stylePreferences }} />;
-  else if (tab === "appearance") body = <Appearance />;
-  else if (tab === "household") {
+  if (tab.admin && !admin) body = <AdminGate />;
+  else if (tab.id === "profile") body = <ProfileForm profile={{ name: profile.name, avatarColor: profile.avatarColor, stylePreferences: profile.stylePreferences }} />;
+  else if (tab.id === "appearance") body = <Appearance />;
+  else if (tab.id === "household") {
     const profiles = await prisma.profile.findMany({
-      where: { ownerId },
-      orderBy: [{ isAdmin: "desc" }, { createdAt: "asc" }],
-      select: { id: true, name: true, avatarColor: true, isAdmin: true, lockedUntil: true, _count: { select: { items: true } } },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true, avatarColor: true, lockedUntil: true, _count: { select: { items: true } } },
     });
-    body = <HouseholdProfiles meId={profile.id} profiles={profiles.map((p) => ({ ...p, locked: Boolean(p.lockedUntil && p.lockedUntil > new Date()), items: p._count.items }))} />;
-  } else if (tab === "devices") {
-    const token = cookies().get(DEVICE_COOKIE)?.value;
-    const currentHash = token ? sha256(token) : null;
-    const devices = await prisma.device.findMany({ where: { ownerId, revokedAt: null }, orderBy: { lastSeenAt: "desc" } });
-    body = <Devices devices={devices.map((d) => ({ id: d.id, name: d.name, lastSeenAt: d.lastSeenAt.toISOString(), createdAt: d.createdAt.toISOString(), current: d.tokenHash === currentHash }))} />;
+    body = <HouseholdProfiles meId={profile.id} profiles={profiles.map((p) => ({ id: p.id, name: p.name, avatarColor: p.avatarColor, locked: Boolean(p.lockedUntil && p.lockedUntil > new Date()), items: p._count.items }))} />;
+  } else if (tab.id === "devices") {
+    const devices = await prisma.device.findMany({ orderBy: { lastSeenAt: "desc" } });
+    body = <Devices devices={devices.map((d) => ({ id: d.id, name: d.label, lastSeenAt: d.lastSeenAt.toISOString(), createdAt: d.createdAt.toISOString(), current: d.id === device.id }))} />;
   } else {
-    const u = await prisma.user.findUniqueOrThrow({ where: { id: ownerId } });
+    const u = await getHousehold();
     body = (
       <AiSettings
         initial={{
@@ -60,17 +57,19 @@ export default async function SettingsPage({ searchParams }: { searchParams: { t
       <PageHeader eyebrow="Settings" title="Settings" />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10">
         <nav className="scroll-row md:mx-0 md:flex-col md:flex-nowrap md:px-0">
-          {tabs.map((t) => (
-            <Link
-              key={t.id}
-              href={`/settings?tab=${t.id}`}
-              className={clsx(
-                "flex shrink-0 items-center gap-2.5 rounded-full px-4 py-2.5 text-sm transition md:rounded-xl",
-                tab === t.id ? "bg-ink text-bg" : "border border-line bg-surface text-muted hover:text-ink md:border-transparent md:bg-transparent",
-              )}
-            >
-              <Icon name={t.icon} size={17} /> {t.label}
-            </Link>
+          {TABS.map((t, i) => (
+            <div key={t.id} className="contents">
+              {i === 2 && <p className="hidden px-4 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted md:block">Household {admin ? "· unlocked" : "· admin key"}</p>}
+              <Link
+                href={`/settings?tab=${t.id}`}
+                className={clsx(
+                  "flex shrink-0 items-center gap-2.5 rounded-full px-4 py-2.5 text-sm transition md:rounded-xl",
+                  tab.id === t.id ? "bg-ink text-bg" : "border border-line bg-surface text-muted hover:text-ink md:border-transparent md:bg-transparent",
+                )}
+              >
+                <Icon name={t.admin && !admin ? "lock" : t.icon} size={17} /> {t.label}
+              </Link>
+            </div>
           ))}
         </nav>
         <div className="min-w-0 max-w-2xl animate-fade-up">{body}</div>

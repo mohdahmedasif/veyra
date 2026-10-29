@@ -41,69 +41,64 @@ enum AiProvider {
   GEMINI
 }
 
-/// The household's admin account (email/password). Owns profiles, devices and AI settings.
-model User {
-  id            String        @id @default(cuid())
-  name          String?
-  email         String        @unique
-  emailVerified DateTime?
-  passwordHash  String?
-  image         String?
-  aiProvider    AiProvider    @default(ENGINE)
-  openaiKeyEnc  String?
-  openaiModel   String?
-  geminiKeyEnc  String?
-  geminiModel   String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  profiles      Profile[]
-  devices       Device[]
-  pairingCodes  PairingCode[]
+/// Household-wide settings (single row, id "household"). Access is via ADMIN_KEY, not accounts.
+model Household {
+  id           String     @id @default("household")
+  aiProvider   AiProvider @default(ENGINE)
+  openaiKeyEnc String?
+  openaiModel  String?
+  geminiKeyEnc String?
+  geminiModel  String?
+  updatedAt    DateTime   @updatedAt
 }
 
 /// A person in the household. Each has their own wardrobe and unlocks with a PIN.
 model Profile {
   id               String           @id @default(cuid())
-  ownerId          String
-  name             String
+  name             String           @unique
   avatarColor      String           @default("#B4645A")
-  pinHash          String
-  isAdmin          Boolean          @default(false)
+  pinHash          String // bcrypt (salted)
   stylePreferences String[]         @default([])
   failedAttempts   Int              @default(0)
   lockedUntil      DateTime?
   createdAt        DateTime         @default(now())
-  owner            User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  sessions         ProfileSession[]
   items            ClothingItem[]
   outfits          Outfit[]
   favorites        FavoriteOutfit[]
-
-  @@index([ownerId])
 }
 
+/// A browser paired with the admin key (or a one-time pairing key). Only the token hash is stored.
 model Device {
-  id         String    @id @default(cuid())
-  ownerId    String
-  name       String
-  tokenHash  String    @unique
-  lastSeenAt DateTime  @default(now())
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
-  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-
-  @@index([ownerId])
+  id         String           @id @default(cuid())
+  label      String
+  tokenHash  String           @unique
+  lastSeenAt DateTime         @default(now())
+  createdAt  DateTime         @default(now())
+  sessions   ProfileSession[]
 }
 
+/// An unlocked profile on one device. Bound to the device, so a copied cookie is useless elsewhere.
+model ProfileSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  profileId String
+  deviceId  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+/// Optional single-use key so a phone can be paired without typing the admin key on it.
 model PairingCode {
   id        String    @id @default(cuid())
-  ownerId   String
   codeHash  String    @unique
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
-  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model ClothingItem {
@@ -167,39 +162,4 @@ model Tag {
   id    String         @id @default(cuid())
   name  String         @unique
   items ClothingItem[]
-}
-
-// NextAuth models
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
 }

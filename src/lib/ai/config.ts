@@ -11,8 +11,10 @@ export interface ResolvedAi {
 }
 
 /** Builds the household's configured provider. Saved keys win; env vars are the fallback. */
-export async function resolveAi(ownerId: string, override?: AiProvider): Promise<ResolvedAi> {
-  const u = await prisma.user.findUniqueOrThrow({ where: { id: ownerId } });
+export const getHousehold = () => prisma.household.upsert({ where: { id: "household" }, create: {}, update: {} });
+
+export async function resolveAi(override?: AiProvider): Promise<ResolvedAi> {
+  const u = await getHousehold();
   const provider = override ?? u.aiProvider;
   if (provider === "OPENAI") {
     const key = decrypt(u.openaiKeyEnc) ?? process.env.OPENAI_API_KEY;

@@ -1,10 +1,17 @@
-import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from "crypto";
+import { createCipheriv, createDecipheriv, createHash, createHmac, hkdfSync, randomBytes, timingSafeEqual } from "crypto";
 
 function secret() {
-  const s = process.env.ENCRYPTION_KEY || process.env.NEXTAUTH_SECRET;
-  if (!s) throw new Error("ENCRYPTION_KEY or NEXTAUTH_SECRET must be set");
+  const s = process.env.ENCRYPTION_KEY || process.env.ADMIN_KEY;
+  if (!s) throw new Error("ENCRYPTION_KEY or ADMIN_KEY must be set");
   return s;
 }
+
+/** Constant-time string comparison (compares digests so lengths don't leak). */
+export function sameSecret(a: string, b: string) {
+  return timingSafeEqual(createHash("sha256").update(a).digest(), createHash("sha256").update(b).digest());
+}
+
+export const hmac = (key: string, data: string) => createHmac("sha256", key).update(data).digest("base64url");
 
 const key = () => Buffer.from(hkdfSync("sha256", secret(), "veyra", "ai-keys", 32));
 

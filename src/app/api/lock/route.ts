@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { clearProfileCookie } from "@/lib/session";
+import { handle } from "@/lib/api";
+import { endSession } from "@/lib/session";
 
-export async function POST() {
-  clearProfileCookie();
-  return NextResponse.json({ ok: true });
-}
+export const POST = () =>
+  handle(async () => {
+    await endSession();
+    return NextResponse.json({ ok: true });
+  });

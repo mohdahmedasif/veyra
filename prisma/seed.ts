@@ -33,15 +33,17 @@ const guestItems: typeof items = [
 ];
 
 async function main() {
-  const email = "demo@veyra.app";
-  await prisma.user.deleteMany({ where: { email } });
-  const user = await prisma.user.create({ data: { email, name: "Demo Stylist", passwordHash: await bcrypt.hash("veyra123", 10) } });
+  // Fresh demo household: no accounts — devices pair with ADMIN_KEY, people unlock with a PIN.
+  await prisma.device.deleteMany();
+  await prisma.pairingCode.deleteMany();
+  await prisma.profile.deleteMany();
+  await prisma.household.upsert({ where: { id: "household" }, create: {}, update: {} });
 
   const admin = await prisma.profile.create({
-    data: { ownerId: user.id, name: "Ava", isAdmin: true, avatarColor: "#B4645A", pinHash: await bcrypt.hash("1234", 10), stylePreferences: ["minimal", "elegant"] },
+    data: { name: "Ava", avatarColor: "#B4645A", pinHash: await bcrypt.hash("1234", 10), stylePreferences: ["minimal", "elegant"] },
   });
   const guest = await prisma.profile.create({
-    data: { ownerId: user.id, name: "Sam", avatarColor: "#6F86A6", pinHash: await bcrypt.hash("0000", 10), stylePreferences: ["classic"] },
+    data: { name: "Sam", avatarColor: "#6F86A6", pinHash: await bcrypt.hash("0000", 10), stylePreferences: ["classic"] },
   });
 
   const created = [];
@@ -62,7 +64,7 @@ async function main() {
   });
   await prisma.favoriteOutfit.create({ data: { profileId: admin.id, outfitId: outfit.id } });
 
-  console.log(`Seeded ${email} (password: veyra123) with profiles Ava (PIN 1234, admin) and Sam (PIN 0000)`);
+  console.log("Seeded profiles Ava (PIN 1234) and Sam (PIN 0000). Pair a device with your ADMIN_KEY.");
 }
 
 main()

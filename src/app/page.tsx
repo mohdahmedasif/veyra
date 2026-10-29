@@ -7,7 +7,7 @@ const FEATURES: { title: string; body: string; icon: IconName }[] = [
   { title: "Digital closet", body: "Snap your pieces once. Veyra organises them by category, color, season and occasion.", icon: "camera" },
   { title: "Mix & Match", body: "Build outfits on a clean canvas and see a live style-match score as you go.", icon: "layers" },
   { title: "AI Stylist", body: "Gemini, OpenAI or our color-theory engine curate looks for every plan.", icon: "sparkle" },
-  { title: "Whole household", body: "Netflix-style profiles with PINs. Pair the family's devices with a one-time key.", icon: "users" },
+  { title: "Whole household", body: "No accounts or emails. Pair a device once with the household key, then everyone unlocks their profile with a PIN.", icon: "users" },
 ];
 
 const LOOK = [
@@ -24,7 +24,7 @@ export default function Landing() {
         <Logo />
         <div className="flex items-center gap-2">
           <span className="hidden sm:block"><ThemeToggle compact /></span>
-          <Link href="/login" className="btn-ghost min-h-[40px] px-4">Sign in</Link>
+          <Link href="/profiles" className="btn-ghost min-h-[40px] px-4">Open app</Link>
         </div>
       </header>
 
@@ -36,8 +36,8 @@ export default function Landing() {
             Veyra turns the clothes you already own into endless, beautifully composed outfits — styled by AI, curated by you.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/signup" className="btn-primary px-7">Create your closet</Link>
-            <Link href="/pair" className="btn-ghost px-7"><Icon name="key" size={16} /> I have a pairing key</Link>
+            <Link href="/pair" className="btn-primary px-7"><Icon name="key" size={16} /> Pair this device</Link>
+            <Link href="/profiles" className="btn-ghost px-7">Already paired? Open</Link>
           </div>
         </div>
 

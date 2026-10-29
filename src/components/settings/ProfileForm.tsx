@@ -59,7 +59,7 @@ export function ProfileForm({ profile }: { profile: { name: string; avatarColor:
         </div>
       </Section>
 
-      <Section title="Change PIN" description="4–6 digits, used to unlock your profile.">
+      <Section title="Change PIN" description="4–8 digits. Changing it signs you out on your other devices.">
         <form
           className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]"
           onSubmit={async (e) => {
@@ -67,10 +67,26 @@ export function ProfileForm({ profile }: { profile: { name: string; avatarColor:
             if (await save(pins, "PIN updated")) setPins({ currentPin: "", newPin: "" });
           }}
         >
-          <input value={pins.currentPin} onChange={(e) => setPins({ ...pins, currentPin: e.target.value.replace(/\D/g, "") })} inputMode="numeric" maxLength={6} placeholder="Current PIN" type="password" className="input" required />
-          <input value={pins.newPin} onChange={(e) => setPins({ ...pins, newPin: e.target.value.replace(/\D/g, "") })} inputMode="numeric" maxLength={6} minLength={4} placeholder="New PIN" type="password" className="input" required />
+          <input value={pins.currentPin} onChange={(e) => setPins({ ...pins, currentPin: e.target.value.replace(/\D/g, "") })} inputMode="numeric" maxLength={8} placeholder="Current PIN" type="password" className="input" required />
+          <input value={pins.newPin} onChange={(e) => setPins({ ...pins, newPin: e.target.value.replace(/\D/g, "") })} inputMode="numeric" maxLength={8} minLength={4} placeholder="New PIN" type="password" className="input" required />
           <button className="btn-ghost">Update</button>
         </form>
+      </Section>
+
+      <Section title="This device" description="Lock returns to the profile screen. Unpairing removes this browser from the household.">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={async () => { await api("/api/lock", { method: "POST" }); window.location.href = "/profiles"; }} className="btn-ghost">Lock</button>
+          <button
+            onClick={async () => {
+              if (!confirm("Unpair this device? You'll need the admin key or a pairing key to use Veyra here again.")) return;
+              await api("/api/devices/self", { method: "DELETE" });
+              window.location.href = "/pair";
+            }}
+            className="btn-danger"
+          >
+            Unpair this device
+          </button>
+        </div>
       </Section>
     </div>
   );
