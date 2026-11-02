@@ -20,7 +20,7 @@ const LOOK = [
 export default function Landing() {
   return (
     <div className="glow min-h-dvh">
-      <header className="pt-safe mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-5">
+      <header className="pt-safe mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-5 md:px-10">
         <Logo />
         <div className="flex items-center gap-2">
           <span className="hidden sm:block"><ThemeToggle compact /></span>
@@ -28,7 +28,7 @@ export default function Landing() {
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-16 pt-8 md:grid-cols-2 md:py-24">
+      <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-8 md:grid-cols-2 md:px-10 md:py-24">
         <div className="animate-fade-up">
           <p className="eyebrow">Your AI wardrobe assistant</p>
           <h1 className="mt-4 text-[3.2rem] leading-[0.98] md:text-7xl">Dress with intention, effortlessly.</h1>
@@ -61,7 +61,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-20">
+      <section className="mx-auto max-w-7xl px-5 pb-20 md:px-10">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <div key={f.title} className="card p-6">
