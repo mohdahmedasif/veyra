@@ -18,6 +18,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
     "@google/genai": "^2.31.0",
     "@imgly/background-removal": "^1.7.0",
     "@prisma/client": "^5.22.0",
