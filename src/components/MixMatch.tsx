@@ -18,13 +18,14 @@ export function MixMatch({ items }: { items: ClothingItem[] }) {
   const present = CATEGORIES.filter((c) => items.some((i) => i.category === c));
   const [category, setCategory] = useState<string>(present[0] ?? "TOP");
   const [occasion, setOccasion] = useState<string | null>(null);
-  const [result, setResult] = useState<OutfitSuggestion | null>(null);
+  const [scored, setResult] = useState<OutfitSuggestion | null>(null);
+  const result = selected.length ? scored : null; // a stale score never shows once the look is empty
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [sheet, setSheet] = useState(false);
 
   useEffect(() => {
-    if (!selected.length) return setResult(null);
+    if (!selected.length) return;
     const ctrl = new AbortController();
     fetch("/api/ai/score", {
       method: "POST",

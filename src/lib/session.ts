@@ -32,17 +32,17 @@ export function checkAdminKey(candidate: string) {
 }
 
 /** Secure only over HTTPS (directly or via a proxy), so plain-http local dev still works. */
-function isHttps() {
-  const h = headers();
+async function isHttps() {
+  const h = await headers();
   return h.get("x-forwarded-proto") === "https" || process.env.NEXT_PUBLIC_APP_URL?.startsWith("https") === true;
 }
 
-function setCookie(name: string, value: string, maxAgeSeconds: number) {
-  cookies().set(name, value, { httpOnly: true, sameSite: "strict", secure: isHttps(), path: "/", maxAge: maxAgeSeconds });
+async function setCookie(name: string, value: string, maxAgeSeconds: number) {
+  (await cookies()).set(name, value, { httpOnly: true, sameSite: "strict", secure: await isHttps(), path: "/", maxAge: maxAgeSeconds });
 }
 
 export async function getDevice(): Promise<Device | null> {
-  const token = cookies().get(COOKIES.device)?.value;
+  const token = (await cookies()).get(COOKIES.device)?.value;
   if (!token) return null;
   const device = await prisma.device.findUnique({ where: { tokenHash: sha256(token) } });
   if (device && Date.now() - device.lastSeenAt.getTime() > 3_600_000)
@@ -52,7 +52,7 @@ export async function getDevice(): Promise<Device | null> {
 
 export async function getContext(now = new Date()): Promise<Ctx | null> {
   const device = await getDevice();
-  const token = cookies().get(COOKIES.session)?.value;
+  const token = (await cookies()).get(COOKIES.session)?.value;
   if (!device || !token) return null;
   const session = await prisma.profileSession.findUnique({ where: { tokenHash: sha256(token) }, include: { profile: true } });
   // The session must belong to *this* device — a copied cookie fails elsewhere.
@@ -70,7 +70,7 @@ export async function requireProfile(): Promise<Ctx> {
 export async function pairDevice(label: string) {
   const token = randomToken();
   const device = await prisma.device.create({ data: { label: label.slice(0, 60) || "Device", tokenHash: sha256(token) } });
-  setCookie(COOKIES.device, token, ACCESS.deviceDays * 86_400);
+  await setCookie(COOKIES.device, token, ACCESS.deviceDays * 86_400);
   return device;
 }
 
@@ -79,30 +79,32 @@ export async function startSession(profileId: string, deviceId: string, now = ne
   await prisma.profileSession.create({
     data: { profileId, deviceId, tokenHash: sha256(token), expiresAt: new Date(now.getTime() + ACCESS.sessionDays * DAY) },
   });
-  setCookie(COOKIES.session, token, ACCESS.sessionDays * 86_400);
+  await setCookie(COOKIES.session, token, ACCESS.sessionDays * 86_400);
 }
 
 export async function endSession() {
-  const token = cookies().get(COOKIES.session)?.value;
+  const jar = await cookies();
+  const token = jar.get(COOKIES.session)?.value;
   if (token) await prisma.profileSession.deleteMany({ where: { tokenHash: sha256(token) } });
-  cookies().delete(COOKIES.session);
-  cookies().delete(COOKIES.admin);
+  jar.delete(COOKIES.session);
+  jar.delete(COOKIES.admin);
 }
 
-export function clearDeviceCookies() {
-  for (const c of Object.values(COOKIES)) cookies().delete(c);
+export async function clearDeviceCookies() {
+  const jar = await cookies();
+  for (const c of Object.values(COOKIES)) jar.delete(c);
 }
 
 // ---- Admin unlock (Settings → household admin). Stateless: HMAC over device id + expiry, keyed by ADMIN_KEY.
 
-export function grantAdmin(deviceId: string, now = Date.now()) {
+export async function grantAdmin(deviceId: string, now = Date.now()) {
   const exp = now + ACCESS.adminMinutes * 60_000;
-  setCookie(COOKIES.admin, `${exp}.${hmac(adminKey(), `${deviceId}.${exp}`)}`, ACCESS.adminMinutes * 60);
+  await setCookie(COOKIES.admin, `${exp}.${hmac(adminKey(), `${deviceId}.${exp}`)}`, ACCESS.adminMinutes * 60);
   return new Date(exp);
 }
 
-export function hasAdmin(deviceId: string, now = Date.now()) {
-  const raw = cookies().get(COOKIES.admin)?.value;
+export async function hasAdmin(deviceId: string, now = Date.now()) {
+  const raw = (await cookies()).get(COOKIES.admin)?.value;
   const key = process.env.ADMIN_KEY;
   if (!raw || !key) return false;
   const [exp, sig] = raw.split(".");

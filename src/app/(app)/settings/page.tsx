@@ -21,10 +21,11 @@ const TABS: { id: string; label: string; icon: IconName; admin?: boolean }[] = [
   { id: "ai", label: "AI Stylist", icon: "sparkle", admin: true },
 ];
 
-export default async function SettingsPage({ searchParams }: { searchParams: { tab?: string } }) {
+export default async function SettingsPage(props: { searchParams: Promise<{ tab?: string }> }) {
+  const searchParams = await props.searchParams;
   const { profile, device } = await requireProfile();
   const tab = TABS.find((t) => t.id === searchParams.tab) ?? TABS[0];
-  const admin = hasAdmin(device.id);
+  const admin = await hasAdmin(device.id);
 
   let body: React.ReactNode;
   if (tab.admin && !admin) body = <AdminGate />;

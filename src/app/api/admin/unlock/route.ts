@@ -7,8 +7,8 @@ import { checkAdminKey, grantAdmin } from "@/lib/session";
 
 /** Unlocks household settings on this device for a few minutes. */
 export const POST = withProfile(async ({ device }, req: Request) => {
-  rateLimit("admin", ACCESS.rateLimits.admin);
+  await rateLimit("admin", ACCESS.rateLimits.admin);
   const { adminKey } = z.object({ adminKey: z.string().max(200) }).parse(await req.json());
   checkAdminKey(adminKey);
-  return NextResponse.json({ expiresAt: grantAdmin(device.id) });
+  return NextResponse.json({ expiresAt: await grantAdmin(device.id) });
 });

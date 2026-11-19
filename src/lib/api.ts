@@ -20,7 +20,7 @@ export function withProfile<A extends unknown[]>(handler: (ctx: Ctx, ...args: A)
         const paired = Boolean(await getDevice());
         return NextResponse.json(paired ? { error: "Profile locked", code: "locked" } : { error: "Device not paired", code: "unpaired" }, { status: paired ? 401 : 403 });
       }
-      if (opts.admin && !hasAdmin(ctx.device.id))
+      if (opts.admin && !await hasAdmin(ctx.device.id))
         return NextResponse.json({ error: "Enter the admin key to change household settings", code: "admin" }, { status: 403 });
       return handler(ctx, ...args);
     });

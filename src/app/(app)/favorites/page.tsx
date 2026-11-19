@@ -6,7 +6,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { prisma } from "@/lib/prisma";
 import { requireProfile } from "@/lib/session";
 
-export default async function FavoritesPage({ searchParams }: { searchParams: { all?: string } }) {
+export default async function FavoritesPage(props: { searchParams: Promise<{ all?: string }> }) {
+  const searchParams = await props.searchParams;
   const { profile } = await requireProfile();
   const profileId = profile.id;
   const showAll = searchParams.all === "1";

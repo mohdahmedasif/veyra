@@ -10,7 +10,7 @@ export const GET = () =>
     return NextResponse.json({
       paired: Boolean(device),
       profile: ctx ? { id: ctx.profile.id, name: ctx.profile.name, avatarColor: ctx.profile.avatarColor } : null,
-      admin: device ? hasAdmin(device.id) : false,
+      admin: device ? await hasAdmin(device.id) : false,
       adminKeyConfigured: Boolean(process.env.ADMIN_KEY),
     });
   });

@@ -8,6 +8,6 @@ export const DELETE = () =>
   handle(async () => {
     const device = await getDevice();
     if (device) await prisma.device.delete({ where: { id: device.id } });
-    clearDeviceCookies();
+    await clearDeviceCookies();
     return NextResponse.json({ ok: true });
   });

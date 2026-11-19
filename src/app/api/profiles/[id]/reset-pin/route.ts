@@ -12,11 +12,11 @@ import { pinSchema } from "@/lib/validators";
  * Forgotten PIN: the admin key (or an admin-unlocked Settings) sets a new one, clears the
  * lockout and signs the profile out everywhere.
  */
-export const POST = withDevice(async (device, req: Request, { params }: { params: { id: string } }) => {
-  rateLimit("admin", ACCESS.rateLimits.admin);
+export const POST = withDevice(async (device, req: Request, { params }: { params: Promise<{ id: string }> }) => {
+  await rateLimit("admin", ACCESS.rateLimits.admin);
   const { adminKey, newPin } = z.object({ adminKey: z.string().max(200).optional(), newPin: pinSchema }).parse(await req.json());
-  if (!hasAdmin(device.id)) checkAdminKey(adminKey ?? "");
-  const profile = await prisma.profile.findUnique({ where: { id: params.id } });
+  if (!await hasAdmin(device.id)) checkAdminKey(adminKey ?? "");
+  const profile = await prisma.profile.findUnique({ where: { id: (await params).id } });
   if (!profile) throw new HttpError(404, "Profile not found");
   await prisma.$transaction([
     prisma.profile.update({ where: { id: profile.id }, data: { pinHash: await bcrypt.hash(newPin, 10), failedAttempts: 0, lockedUntil: null } }),

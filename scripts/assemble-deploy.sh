@@ -15,11 +15,12 @@ mkdir -p "$OUT/.next"
 cp -a .next/static "$OUT/.next/static"
 cp -a public "$OUT/public"
 
-# Schema and the Prisma CLI, so the server can run `db push` / seed without the source tree.
+# Schema, so the server can run `db push` against the same models this build was made from.
+# The Prisma CLI itself is fetched on the server at a pinned version (see deploy-server.sh):
+# it has many dependencies and isn't needed at runtime, so it stays out of this folder.
 mkdir -p "$OUT/prisma"
 cp -a prisma/. "$OUT/prisma/"
-# Merge into node_modules (the standalone output may already have some of these directories).
-for pkg in prisma @prisma .prisma; do
+for pkg in @prisma .prisma; do
   mkdir -p "$OUT/node_modules/$pkg"
   cp -a "node_modules/$pkg/." "$OUT/node_modules/$pkg/"
 done

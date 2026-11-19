@@ -36,7 +36,6 @@ export function AppNav({ profile }: { profile: NavProfile }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const active = (href: string) => path !== "/wardrobe/new" && (path === href || path.startsWith(href + "/"));
 
-  useEffect(() => setMenu(false), [path]);
   useEffect(() => {
     if (!menu) return;
     const close = (e: MouseEvent) => !menuRef.current?.contains(e.target as Node) && setMenu(false);
@@ -84,8 +83,8 @@ export function AppNav({ profile }: { profile: NavProfile }) {
                     </div>
                   </div>
                   <div className="my-1 border-t border-line" />
-                  <MenuLink href="/favorites" icon="heart" label="Saved looks" />
-                  <MenuLink href="/settings" icon="settings" label="Settings" />
+                  <MenuLink href="/favorites" icon="heart" label="Saved looks" onNavigate={() => setMenu(false)} />
+                  <MenuLink href="/settings" icon="settings" label="Settings" onNavigate={() => setMenu(false)} />
                   <div className="flex items-center justify-between px-3 py-2">
                     <span className="text-sm text-muted">Theme</span>
                     <ThemeToggle compact />
@@ -127,9 +126,9 @@ function Tab({ href, label, icon, active }: { href: string; label: string; icon:
   );
 }
 
-function MenuLink({ href, icon, label }: { href: string; icon: IconName; label: string }) {
+function MenuLink({ href, icon, label, onNavigate }: { href: string; icon: IconName; label: string; onNavigate: () => void }) {
   return (
-    <Link href={href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-surface-2">
+    <Link href={href} onClick={onNavigate} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-surface-2">
       <Icon name={icon} size={18} /> {label}
     </Link>
   );

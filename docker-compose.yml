@@ -16,7 +16,7 @@ services:
   # One-off: creates/updates tables and seeds the demo user, then exits.
   migrate:
     build: { context: ., target: builder }
-    command: sh -c "npx prisma db push --skip-generate && npm run db:seed"
+    command: sh -c "npx prisma db push && npm run db:seed"
     environment:
       DATABASE_URL: postgresql://veyra:${POSTGRES_PASSWORD:-veyra}@db:5432/veyra
     depends_on:

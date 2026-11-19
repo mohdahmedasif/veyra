@@ -47,7 +47,8 @@ export function Devices({ devices }: { devices: D[] }) {
     try {
       if (d.current) {
         await api("/api/devices/self", { method: "DELETE" });
-        window.location.href = "/pair";
+        router.replace("/pair");
+        router.refresh();
         return;
       }
       await api(`/api/admin/devices/${d.id}`, { method: "DELETE" });

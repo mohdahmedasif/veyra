@@ -8,8 +8,8 @@ import { HttpError } from "./api";
  */
 const hits = new Map<string, number[]>();
 
-export function clientIp() {
-  const h = headers();
+export async function clientIp() {
+  const h = await headers();
   if (process.env.TRUST_PROXY === "1") {
     const fwd = h.get("x-forwarded-for")?.split(",")[0]?.trim();
     if (fwd) return fwd;
@@ -17,8 +17,8 @@ export function clientIp() {
   return h.get("x-real-ip") ?? "local";
 }
 
-export function rateLimit(bucket: string, limit: { max: number; windowMs: number }, now = Date.now()) {
-  const key = `${bucket}:${clientIp()}`;
+export async function rateLimit(bucket: string, limit: { max: number; windowMs: number }, now = Date.now()) {
+  const key = `${bucket}:${await clientIp()}`;
   const recent = (hits.get(key) ?? []).filter((t) => now - t < limit.windowMs);
   if (recent.length >= limit.max) {
     const retry = Math.ceil((limit.windowMs - (now - recent[0])) / 1000);

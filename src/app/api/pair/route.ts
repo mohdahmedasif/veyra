@@ -12,7 +12,7 @@ const schema = z.object({ key: z.string().trim().min(4).max(200), label: z.strin
 /** Pairs this browser using the household ADMIN_KEY or a single-use pairing key. */
 export async function POST(req: Request) {
   return handle(async () => {
-    rateLimit("pair", ACCESS.rateLimits.pair);
+    await rateLimit("pair", ACCESS.rateLimits.pair);
     const { key, label } = schema.parse(await req.json());
     const admin = adminKey(); // 503 when not configured
 

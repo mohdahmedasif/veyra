@@ -14,7 +14,7 @@ git fetch --depth 1 origin deploy
 git reset --hard FETCH_HEAD
 
 set -a; . ./.env; set +a
-node node_modules/prisma/build/index.js db push --skip-generate
+PRISMA_VERSION=7.10.1 npx --yes "prisma@${PRISMA_VERSION}" db push --schema prisma/schema.prisma --url "$DATABASE_URL"
 
 # Restart however the app runs here (systemd shown; use `docker compose up -d` for Docker).
 sudo systemctl restart veyra

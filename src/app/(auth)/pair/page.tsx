@@ -25,6 +25,8 @@ function PairForm() {
   const [notConfigured, setNotConfigured] = useState(false);
 
   useEffect(() => {
+    // Reads the browser once on mount; there is no server value to match.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLabel(guessDeviceName());
     // Already paired (e.g. arrived via a link from another site, where SameSite=Strict hides cookies)?
     api<{ paired: boolean; adminKeyConfigured: boolean }>("/api/auth/status")

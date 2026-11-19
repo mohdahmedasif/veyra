@@ -75,12 +75,14 @@ export function ProfileForm({ profile }: { profile: { name: string; avatarColor:
 
       <Section title="This device" description="Lock returns to the profile screen. Unpairing removes this browser from the household.">
         <div className="flex flex-wrap gap-2">
-          <button onClick={async () => { await api("/api/lock", { method: "POST" }); window.location.href = "/profiles"; }} className="btn-ghost">Lock</button>
+          <button onClick={async () => { await api("/api/lock", { method: "POST" }); router.replace("/profiles");
+          router.refresh(); }} className="btn-ghost">Lock</button>
           <button
             onClick={async () => {
               if (!confirm("Unpair this device? You'll need the admin key or a pairing key to use Veyra here again.")) return;
               await api("/api/devices/self", { method: "DELETE" });
-              window.location.href = "/pair";
+              router.replace("/pair");
+        router.refresh();
             }}
             className="btn-danger"
           >

@@ -10,7 +10,8 @@ import { CATEGORIES, OCCASIONS, label } from "@/types";
 
 type Search = { category?: string; color?: string; occasion?: string };
 
-export default async function WardrobePage({ searchParams }: { searchParams: Search }) {
+export default async function WardrobePage(props: { searchParams: Promise<Search> }) {
+  const searchParams = await props.searchParams;
   const { profile } = await requireProfile();
   const where: Prisma.ClothingItemWhereInput = { profileId: profile.id };
   if (searchParams.category && CATEGORIES.includes(searchParams.category as Category)) where.category = searchParams.category as Category;
@@ -28,14 +29,6 @@ export default async function WardrobePage({ searchParams }: { searchParams: Sea
     const qs = new URLSearchParams(Object.entries(next).filter(([, v]) => v) as [string, string][]);
     return `/wardrobe${qs.size ? `?${qs}` : ""}`;
   };
-  const Filter = ({ k, values, all }: { k: keyof Search; values: string[]; all: string }) => (
-    <div className="scroll-row">
-      <Link href={href({ [k]: undefined })} className={`chip ${!searchParams[k] ? "chip-active" : ""}`}>{all}</Link>
-      {values.map((v) => (
-        <Link key={v} href={href({ [k]: v })} className={`chip ${searchParams[k] === v ? "chip-active" : ""}`}>{label(v)}</Link>
-      ))}
-    </div>
-  );
   const filtered = Boolean(searchParams.category || searchParams.color || searchParams.occasion);
 
   return (
@@ -44,9 +37,9 @@ export default async function WardrobePage({ searchParams }: { searchParams: Sea
 
       {total > 0 && (
         <div className="mb-6 space-y-2.5">
-          <Filter k="category" values={CATEGORIES} all="All pieces" />
-          <Filter k="occasion" values={OCCASIONS} all="Any occasion" />
-          {colors.length > 1 && <Filter k="color" values={colors.map((c) => c.color)} all="Any color" />}
+          <Filter k="category" values={CATEGORIES} all="All pieces" current={searchParams.category} href={(p) => href(p)} />
+          <Filter k="occasion" values={OCCASIONS} all="Any occasion" current={searchParams.occasion} href={(p) => href(p)} />
+          {colors.length > 1 && <Filter k="color" values={colors.map((c) => c.color)} all="Any color" current={searchParams.color} href={(p) => href(p)} />}
         </div>
       )}
 
@@ -61,6 +54,17 @@ export default async function WardrobePage({ searchParams }: { searchParams: Sea
       ) : (
         <EmptyState icon="camera" title="Nothing here yet" body="Photograph a piece you love and Veyra will start learning your style." href="/wardrobe/new" cta="Add your first piece" />
       )}
+    </div>
+  );
+}
+
+function Filter({ k, values, all, current, href }: { k: keyof Search; values: string[]; all: string; current?: string; href: (patch: Partial<Search>) => string }) {
+  return (
+    <div className="scroll-row">
+      <Link href={href({ [k]: undefined })} className={`chip ${!current ? "chip-active" : ""}`}>{all}</Link>
+      {values.map((v) => (
+        <Link key={v} href={href({ [k]: v })} className={`chip ${current === v ? "chip-active" : ""}`}>{label(v)}</Link>
+      ))}
     </div>
   );
 }

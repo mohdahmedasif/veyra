@@ -14,23 +14,26 @@ export function CropEditor({ src, onApply, onCancel }: { src: string; onApply: (
   const frame = useRef<HTMLDivElement>(null);
   const drag = useRef<{ handle: Handle; start: { x: number; y: number }; rect: CropRect } | null>(null);
 
-  const point = (e: React.PointerEvent) => {
-    const b = frame.current!.getBoundingClientRect();
+  // The frame is found from the event target, so no ref is read while rendering.
+  const frameOf = (e: React.PointerEvent) => (e.currentTarget as HTMLElement).closest<HTMLElement>("[data-crop-frame]")!;
+
+  const point = (e: React.PointerEvent, el: HTMLElement) => {
+    const b = el.getBoundingClientRect();
     return { x: (e.clientX - b.left) / b.width, y: (e.clientY - b.top) / b.height };
   };
 
-  function onDown(handle: Handle) {
-    return (e: React.PointerEvent) => {
-      e.stopPropagation();
-      (e.target as Element).setPointerCapture(e.pointerId);
-      drag.current = { handle, start: point(e), rect };
-    };
+  // One handler for every grip; the grip names itself with data-handle.
+  function onDown(e: React.PointerEvent<HTMLElement>) {
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const handle = e.currentTarget.dataset.handle as Handle;
+    drag.current = { handle, start: point(e, frameOf(e)), rect };
   }
 
   function onMove(e: React.PointerEvent) {
     const d = drag.current;
     if (!d) return;
-    const p = point(e);
+    const p = point(e, frameOf(e));
     const dx = p.x - d.start.x, dy = p.y - d.start.y;
     const r = { ...d.rect };
     if (d.handle === "move") {
@@ -55,10 +58,11 @@ export function CropEditor({ src, onApply, onCancel }: { src: string; onApply: (
         <button onClick={() => setRect({ x: 0, y: 0, w: 1, h: 1 })} className="min-h-[44px] px-2 opacity-80">Reset</button>
       </div>
       <div className="flex min-h-0 flex-1 items-center justify-center p-6">
-        <div ref={frame} className="relative max-h-full touch-none select-none" onPointerMove={onMove} onPointerUp={() => (drag.current = null)}>
+        <div ref={frame} data-crop-frame className="relative max-h-full touch-none select-none" onPointerMove={onMove} onPointerUp={() => (drag.current = null)}>
           <img src={src} alt="" draggable={false} className="block max-h-[70dvh] max-w-full bg-[repeating-conic-gradient(#3a3330_0_25%,#2a2421_0_50%)] bg-[length:20px_20px]" />
           <div
-            onPointerDown={onDown("move")}
+            data-handle="move"
+            onPointerDown={onDown}
             className="absolute cursor-move border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]"
             style={{ left: pct(rect.x), top: pct(rect.y), width: pct(rect.w), height: pct(rect.h) }}
           >
@@ -68,7 +72,8 @@ export function CropEditor({ src, onApply, onCancel }: { src: string; onApply: (
             {(["nw", "ne", "sw", "se"] as const).map((h) => (
               <span
                 key={h}
-                onPointerDown={onDown(h)}
+                data-handle={h}
+                onPointerDown={onDown}
                 className="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-white/30"
                 style={{ left: h.includes("w") ? 0 : "100%", top: h.includes("n") ? 0 : "100%", cursor: `${h}-resize` }}
               />

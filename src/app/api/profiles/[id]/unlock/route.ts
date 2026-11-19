@@ -11,10 +11,10 @@ import { lockoutMinutes, startSession } from "@/lib/session";
  * PIN unlock. The first 5 misses are free; after that each miss locks the profile for
  * 1, 5, 30, then 120 minutes. A correct PIN resets the counter.
  */
-export const POST = withDevice(async (device, req: Request, { params }: { params: { id: string } }) => {
-  rateLimit("unlock", ACCESS.rateLimits.unlock);
+export const POST = withDevice(async (device, req: Request, { params }: { params: Promise<{ id: string }> }) => {
+  await rateLimit("unlock", ACCESS.rateLimits.unlock);
   const { pin } = z.object({ pin: z.string().max(ACCESS.pinMax) }).parse(await req.json());
-  const profile = await prisma.profile.findUnique({ where: { id: params.id } });
+  const profile = await prisma.profile.findUnique({ where: { id: (await params).id } });
   if (!profile) throw new HttpError(404, "Profile not found");
 
   const now = new Date();

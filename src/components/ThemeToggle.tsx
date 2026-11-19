@@ -15,7 +15,9 @@ function apply(theme: Theme) {
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>("system");
   useEffect(() => {
+    // Reads the saved theme once on mount, after hydration, so server and client markup match.
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme((localStorage.getItem(THEME_KEY) as Theme) || "system");
     } catch {}
     const mq = matchMedia("(prefers-color-scheme: dark)");
