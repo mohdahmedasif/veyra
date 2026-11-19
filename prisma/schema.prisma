@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  TOP
+  BOTTOM
+  DRESS
+  OUTERWEAR
+  SHOES
+  ACCESSORY
+  BAG
+}
+
+enum Season {
+  SPRING
+  SUMMER
+  AUTUMN
+  WINTER
+  ALL
+}
+
+enum Occasion {
+  CASUAL
+  WORK
+  FORMAL
+  PARTY
+  SPORT
+  DATE
+  TRAVEL
+}
+
+enum AiProvider {
+  ENGINE
+  OPENAI
+  GEMINI
+}
+
+/// Household-wide settings (single row, id "household"). Access is via ADMIN_KEY, not accounts.
+model Household {
+  id           String     @id @default("household")
+  aiProvider   AiProvider @default(ENGINE)
+  openaiKeyEnc String?
+  openaiModel  String?
+  geminiKeyEnc String?
+  geminiModel  String?
+  updatedAt    DateTime   @updatedAt
+}
+
+/// A person in the household. Each has their own wardrobe and unlocks with a PIN.
+model Profile {
+  id               String           @id @default(cuid())
+  name             String           @unique
+  avatarColor      String           @default("#B4645A")
+  pinHash          String // bcrypt (salted)
+  stylePreferences String[]         @default([])
+  failedAttempts   Int              @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime         @default(now())
+  sessions         ProfileSession[]
+  items            ClothingItem[]
+  outfits          Outfit[]
+  favorites        FavoriteOutfit[]
+}
+
+/// A browser paired with the admin key (or a one-time pairing key). Only the token hash is stored.
+model Device {
+  id         String           @id @default(cuid())
+  label      String
+  tokenHash  String           @unique
+  lastSeenAt DateTime         @default(now())
+  createdAt  DateTime         @default(now())
+  sessions   ProfileSession[]
+}
+
+/// An unlocked profile on one device. Bound to the device, so a copied cookie is useless elsewhere.
+model ProfileSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  profileId String
+  deviceId  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+/// Optional single-use key so a phone can be paired without typing the admin key on it.
+model PairingCode {
+  id        String    @id @default(cuid())
+  codeHash  String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model ClothingItem {
+  id        String       @id @default(cuid())
+  profileId String
+  title     String
+  category  Category
+  color     String
+  colorHex  String?
+  season    Season       @default(ALL)
+  occasions Occasion[]   @default([])
+  tags      Tag[]
+  imageUrl  String
+  brand     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  profile   Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  outfits   OutfitItem[]
+
+  @@index([profileId, category])
+}
+
+model Outfit {
+  id        String           @id @default(cuid())
+  profileId String
+  name      String
+  occasion  Occasion?
+  score     Int?
+  notes     String?
+  aiReason  String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  profile   Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  items     OutfitItem[]
+  favorites FavoriteOutfit[]
+
+  @@index([profileId])
+}
+
+model OutfitItem {
+  outfitId String
+  itemId   String
+  position Int          @default(0)
+  outfit   Outfit       @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  item     ClothingItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@id([outfitId, itemId])
+}
+
+model FavoriteOutfit {
+  profileId String
+  outfitId  String
+  createdAt DateTime @default(now())
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  outfit    Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, outfitId])
+}
+
+model Tag {
+  id    String         @id @default(cuid())
+  name  String         @unique
+  items ClothingItem[]
+}
