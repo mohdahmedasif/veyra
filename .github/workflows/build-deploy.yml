@@ -1,6 +1,6 @@
 # Builds Veyra on GitHub and publishes ready-to-run output to the `deploy` branch.
 # The production server pulls `deploy` and runs scripts/deploy-server.sh: it never builds.
-name: Build and publish deploy branch
+name: Build & publish release
 
 on:
   push:
