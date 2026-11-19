@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Veyra logo">
+  <rect width="120" height="120" rx="28" fill="#231A16"/>
+  <path d="M30 40 L60 90 L90 40" fill="none" stroke="#FAF7F2" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="94" cy="28" r="7" fill="#B4645A"/>
+</svg>
