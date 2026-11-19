@@ -31,14 +31,14 @@
       "static/chunks/972-9f6625c6e2ed8096.js",
       "static/chunks/app/profiles/page-053ad9a45adf1ecb.js"
     ],
-    "/(app)/combos/page": [
+    "/(app)/dashboard/page": [
       "static/chunks/webpack-83f80c3514d555d7.js",
       "static/chunks/fd9d1056-f33ec140fae66034.js",
       "static/chunks/117-e594be1309f6157a.js",
       "static/chunks/main-app-f2b03ced3a7368d0.js",
       "static/chunks/972-9f6625c6e2ed8096.js",
       "static/chunks/878-cdeaadccb518dc2a.js",
-      "static/chunks/app/(app)/combos/page-a56b089e0a591290.js"
+      "static/chunks/app/(app)/dashboard/page-2c21586b80606d64.js"
     ],
     "/(app)/layout": [
       "static/chunks/webpack-83f80c3514d555d7.js",
@@ -61,6 +61,15 @@
       "static/chunks/117-e594be1309f6157a.js",
       "static/chunks/main-app-f2b03ced3a7368d0.js",
       "static/chunks/app/(app)/ai/page-edd8d18d660d3d3a.js"
+    ],
+    "/(app)/combos/page": [
+      "static/chunks/webpack-83f80c3514d555d7.js",
+      "static/chunks/fd9d1056-f33ec140fae66034.js",
+      "static/chunks/117-e594be1309f6157a.js",
+      "static/chunks/main-app-f2b03ced3a7368d0.js",
+      "static/chunks/972-9f6625c6e2ed8096.js",
+      "static/chunks/878-cdeaadccb518dc2a.js",
+      "static/chunks/app/(app)/combos/page-a56b089e0a591290.js"
     ],
     "/(app)/favorites/page": [
       "static/chunks/webpack-83f80c3514d555d7.js",
@@ -87,15 +96,6 @@
       "static/chunks/main-app-f2b03ced3a7368d0.js",
       "static/chunks/972-9f6625c6e2ed8096.js",
       "static/chunks/app/(app)/settings/page-2c9a718d7cf7ebfa.js"
-    ],
-    "/(app)/dashboard/page": [
-      "static/chunks/webpack-83f80c3514d555d7.js",
-      "static/chunks/fd9d1056-f33ec140fae66034.js",
-      "static/chunks/117-e594be1309f6157a.js",
-      "static/chunks/main-app-f2b03ced3a7368d0.js",
-      "static/chunks/972-9f6625c6e2ed8096.js",
-      "static/chunks/878-cdeaadccb518dc2a.js",
-      "static/chunks/app/(app)/dashboard/page-2c21586b80606d64.js"
     ],
     "/(app)/wardrobe/new/page": [
       "static/chunks/webpack-83f80c3514d555d7.js",
