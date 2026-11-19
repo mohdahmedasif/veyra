@@ -1,0 +1,95 @@
+# Builds Veyra on GitHub and publishes ready-to-run output to the `deploy` branch.
+# The production server pulls `deploy` and runs scripts/deploy-server.sh: it never builds.
+name: Build and publish deploy branch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One build at a time; a newer push to main cancels an older build still running.
+concurrency:
+  group: build-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # Same OS as the server so native modules (the Prisma query engine) match.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      # Placeholder only: `next build` doesn't connect to the database. Real values live on the server.
+      DATABASE_URL: postgresql://build:build@localhost:5432/build
+      # Build-time public value (from repository variables). Empty = IMG.LY's CDN for the cutout model.
+      NEXT_PUBLIC_BG_REMOVAL_PATH: ${{ vars.NEXT_PUBLIC_BG_REMOVAL_PATH }}
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: src
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: src
+        run: npm run lint
+
+      - name: Build
+        working-directory: src
+        run: npm run build
+
+      - name: Assemble output
+        working-directory: src
+        run: bash scripts/assemble-deploy.sh "$GITHUB_WORKSPACE/out"
+
+      - name: Check out deploy branch
+        uses: actions/checkout@v4
+        with:
+          path: deploy
+          fetch-depth: 1
+          ref: main
+
+      - name: Publish to deploy branch
+        working-directory: deploy
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Continue the existing deploy history, or start it on first run (never force-push).
+          if git ls-remote --exit-code --heads origin deploy >/dev/null 2>&1; then
+            git fetch --depth 1 origin deploy
+            git checkout -B deploy FETCH_HEAD
+          else
+            git checkout --orphan deploy
+          fi
+          # Replace everything with the new build output.
+          git rm -rq --ignore-unmatch . || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$GITHUB_WORKSPACE/out/." .
+          # -f: also add files a package's own .gitignore would skip (needed at runtime).
+          git add -A -f .
+          SUBJECT="$(git -C "$GITHUB_WORKSPACE/src" log -1 --format=%s "$SOURCE_SHA")"
+          git commit -q -m "build ${SOURCE_SHA::7}: ${SUBJECT}"
+          git push origin deploy
+          echo "Published $(git rev-parse HEAD) to deploy" >> "$GITHUB_STEP_SUMMARY"
